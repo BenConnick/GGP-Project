@@ -60,5 +60,8 @@ private:
 
 	DirectionalLight dirLight;
 	DirectionalLight dirLight2;
+
+	// temporary
+	float myTimer;
 };
 

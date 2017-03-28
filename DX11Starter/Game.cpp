@@ -391,6 +391,16 @@ void Game::Update(float deltaTime, float totalTime)
 	//entities[2]->SetScale(XMFLOAT3(cosTime, cosTime, cosTime));
 	entities[4]->SetRotation(XMFLOAT3(0, 0, totalTime));
 	//entities[4]->SetScale(XMFLOAT3(cosTime, cosTime, cosTime));
+
+	// timer
+	myTimer += deltaTime;
+
+	// create entities dynamically
+	if (myTimer > 1) {
+		myTimer -= 1;
+		entities.push_back(new Entity(meshes[0], materials[0]));
+		entities[entities.size() - 1]->SetPosition(XMFLOAT3(0,0,entities.size()));
+	}
 }
 
 // --------------------------------------------------------
