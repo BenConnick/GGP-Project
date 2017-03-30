@@ -84,6 +84,8 @@ Game::~Game()
 	}
 
 	delete camera;
+	delete player;
+	delete nodeManager;
 
 	sampler->Release();
 
@@ -287,14 +289,14 @@ void Game::CreateBasicGeometry()
 		entities.push_back(nodeEnt);
 	}
 
-	/*
+	///*
 	// create a dozen test objects
 	for (int i = 0; i < 12; i++) {
 		// create a new entity
 		entities.push_back(new Entity(meshes[0], materials[0]));
 		// put it in the recycler
 		Recycler::GetInstance().Deactivate(entities[entities.size() - 1]);
-	}*/
+	}//*/
 	
 
 
@@ -483,7 +485,7 @@ void Game::Update(float deltaTime, float totalTime)
 
 	player->Update();
 	nodeManager->Update(deltaTime);
-	/*
+	//*
 	// create entities dynamically
 	float max = 0.2;
 	if (myTimer > max) {
@@ -502,7 +504,7 @@ void Game::Update(float deltaTime, float totalTime)
 		e->SetPosition(XMFLOAT3(parser.GetNote(counter + 10), 3, 0));
 		//entities[entities.size() - 1]->
 
-	}*/
+	}//*/
 }
 
 // --------------------------------------------------------
@@ -561,7 +563,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	//	0,     // Offset to the first index we want to use
 	//	0);    // Offset to add to each index when looking up vertices
 
-	/*for (auto mesh : meshes) {
+	/*
+	//for (auto mesh : meshes) {
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
 		ID3D11Buffer* vb = mesh->GetVertexBuffer();

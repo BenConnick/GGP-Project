@@ -13,10 +13,14 @@ MusicNodeManager::MusicNodeManager(Rail** r, Mesh* defaultNodeMesh, Material* de
 
 MusicNodeManager::~MusicNodeManager()
 {
+	for (auto node : nodes) {
+		delete node;
+	}
 }
 
 void MusicNodeManager::AddNode(int rail, float time)
 {
+	throw;//currently all entities are drawn in Game, this method makes an entity that is not drawn, use overload method
 	Entity* e = new Entity(nodeMesh,nodeMat);
 	AddNode(e, rail, time);
 }
