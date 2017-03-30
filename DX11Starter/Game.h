@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "Lights.h"
 #include "Material.h"
+#include "SMParser.h"
 #include <DirectXMath.h>
 #include <vector>
 
@@ -63,5 +64,6 @@ private:
 
 	// temporary
 	float myTimer;
+	SMParser parser = SMParser();
 };
 

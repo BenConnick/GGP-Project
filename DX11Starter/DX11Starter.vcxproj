@@ -126,6 +126,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Recycler.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -136,7 +137,9 @@
     <ClInclude Include="Lights.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Recycler.h" />
     <ClInclude Include="SimpleShader.h" />
+    <ClInclude Include="SMParser.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>

@@ -32,7 +32,7 @@ Game::Game(HINSTANCE hInstance)
 #if defined(DEBUG) || defined(_DEBUG)
 	// Do we want a console window?  Probably only in debug mode
 	CreateConsoleWindow(500, 120, 32, 120);
-	printf("Console window created successfully.  Feel free to printf() here.");
+	printf("Console window created successfully.  Feel free to printf() here.\n");
 #endif
 }
 
@@ -89,6 +89,9 @@ void Game::Init()
 	// geometric primitives (points, lines or triangles) we want to draw.  
 	// Essentially: "What kind of shape should the GPU draw with our data?"
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// load song beatmap, print success
+	cout << "songs loaded: " << parser.OpenFile("Assets/Beatmaps/song.sm");
 }
 
 // --------------------------------------------------------
@@ -396,10 +399,12 @@ void Game::Update(float deltaTime, float totalTime)
 	myTimer += deltaTime;
 
 	// create entities dynamically
-	if (myTimer > 1) {
-		myTimer -= 1;
+	float max = 0.2;
+	if (myTimer > max) {
+		myTimer -= max;
 		entities.push_back(new Entity(meshes[0], materials[0]));
-		entities[entities.size() - 1]->SetPosition(XMFLOAT3(0,0,entities.size()));
+		// FOR DEMONSTRATION ONLY
+		entities[entities.size() - 1]->SetPosition(XMFLOAT3(parser.GetNote(entities.size()+10), entities.size() / 10.0,0));
 	}
 }
 

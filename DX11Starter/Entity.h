@@ -22,8 +22,11 @@ public:
 	void MoveForward();
 	Mesh* GetMesh();
 	Material* GetMaterial();
+	void Activate();
+	void Deactivate();
 	void PrepareMaterial(XMFLOAT4X4, XMFLOAT4X4, DirectionalLight, DirectionalLight);
 private:
+	bool active;
 	Mesh* _mesh;
 	Material* _material;
 	XMFLOAT4X4 _worldMatrix;

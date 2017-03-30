@@ -109,3 +109,11 @@ void Entity::PrepareMaterial(XMFLOAT4X4 view, XMFLOAT4X4 projection, Directional
 	vs->SetShader();
 	ps->SetShader();
 }
+
+void Entity::Activate() {
+	active = true;
+}
+
+void Entity::Deactivate() {
+	active = false;
+}
