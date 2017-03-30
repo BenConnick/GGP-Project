@@ -41,35 +41,37 @@ void Camera::Update(float deltaTime)
 	XMVECTOR direction = XMVector3Rotate(XMLoadFloat3(&forward), rotation);
 	XMVECTOR xDirection = XMVector3Rotate(XMLoadFloat3(&xAxis), rotation);
 
-	if (GetAsyncKeyState('W') & 0x8000) {
-		XMVECTOR curPos = XMLoadFloat3(&_position);
-		XMVECTOR zForward = direction * deltaTime;
-		curPos += zForward;
-		XMStoreFloat3(&_position, curPos);
-	}
-	if (GetAsyncKeyState('S') & 0x8000) {
-		XMVECTOR curPos = XMLoadFloat3(&_position);
-		XMVECTOR zForward = direction * deltaTime;
-		curPos -= zForward;
-		XMStoreFloat3(&_position, curPos);
-	}
-	if (GetAsyncKeyState('A') & 0x8000) {
-		XMVECTOR curPos = XMLoadFloat3(&_position);
-		XMVECTOR xForward = xDirection * deltaTime;
-		curPos -= xForward;
-		XMStoreFloat3(&_position, curPos);
-	}
-	if (GetAsyncKeyState('D') & 0x8000) {
-		XMVECTOR curPos = XMLoadFloat3(&_position);
-		XMVECTOR xForward = xDirection * deltaTime;
-		curPos += xForward;
-		XMStoreFloat3(&_position, curPos);
-	}
-	if (GetAsyncKeyState(' ') & 0x8000) {
-		_position.y += 1 * deltaTime;
-	}
-	if (GetAsyncKeyState('X') & 0x8000) {
-		_position.y -= 1 * deltaTime;
+	if (_userControlled) {
+		if (GetAsyncKeyState('W') & 0x8000) {
+			XMVECTOR curPos = XMLoadFloat3(&_position);
+			XMVECTOR zForward = direction * deltaTime;
+			curPos += zForward;
+			XMStoreFloat3(&_position, curPos);
+		}
+		if (GetAsyncKeyState('S') & 0x8000) {
+			XMVECTOR curPos = XMLoadFloat3(&_position);
+			XMVECTOR zForward = direction * deltaTime;
+			curPos -= zForward;
+			XMStoreFloat3(&_position, curPos);
+		}
+		if (GetAsyncKeyState('A') & 0x8000) {
+			XMVECTOR curPos = XMLoadFloat3(&_position);
+			XMVECTOR xForward = xDirection * deltaTime;
+			curPos -= xForward;
+			XMStoreFloat3(&_position, curPos);
+		}
+		if (GetAsyncKeyState('D') & 0x8000) {
+			XMVECTOR curPos = XMLoadFloat3(&_position);
+			XMVECTOR xForward = xDirection * deltaTime;
+			curPos += xForward;
+			XMStoreFloat3(&_position, curPos);
+		}
+		if (GetAsyncKeyState(' ') & 0x8000) {
+			_position.y += 1 * deltaTime;
+		}
+		if (GetAsyncKeyState('X') & 0x8000) {
+			_position.y -= 1 * deltaTime;
+		}
 	}
 
 	XMMATRIX lookAt = XMMatrixLookToLH(XMLoadFloat3(&_position), direction, XMLoadFloat3(&yAxis));

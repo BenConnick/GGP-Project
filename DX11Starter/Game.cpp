@@ -263,13 +263,30 @@ void Game::CreateBasicGeometry()
 	ent6->SetPosition(XMFLOAT3(0, 0, 2));
 	//entities.push_back(ent6);
 
+	Entity* playerEnt = new Entity(sphere, defMaterial);
+	playerEnt->Activate();
+	Rail** rails = new Rail*[Player::railCount];
+	for (int i = 0; i < Player::railCount; i++) {
+		Entity* railEnt = new Entity(cube, defMaterial);
+		railEnt->SetPosition({1*i - 1.0f,-1.0f,0.0f});
+		railEnt->SetScale({ 0.1f, 0.1f, 50.0f });
+		railEnt->Activate();
+		rails[i] = new Rail(railEnt);
+		entities.push_back(railEnt);
+	}
+	player = new Player(playerEnt, rails);
+	entities.push_back(playerEnt);
+
+	/*
 	// create a dozen test objects
 	for (int i = 0; i < 12; i++) {
 		// create a new entity
 		entities.push_back(new Entity(meshes[0], materials[0]));
 		// put it in the recycler
 		Recycler::GetInstance().Deactivate(entities[entities.size() - 1]);
-	}
+	}*/
+	
+
 
 	//// Create some temporary variables to represent colors
 	//// - Not necessary, just makes things more readable
@@ -453,6 +470,9 @@ void Game::Update(float deltaTime, float totalTime)
 		}
 	}
 
+
+	player->Update();
+	/*
 	// create entities dynamically
 	float max = 0.2;
 	if (myTimer > max) {
@@ -471,7 +491,7 @@ void Game::Update(float deltaTime, float totalTime)
 		e->SetPosition(XMFLOAT3(parser.GetNote(counter + 10), 3, 0));
 		//entities[entities.size() - 1]->
 
-	}
+	}*/
 }
 
 // --------------------------------------------------------

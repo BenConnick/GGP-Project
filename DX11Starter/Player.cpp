@@ -14,6 +14,23 @@ Player::~Player()
 {
 }
 
+void Player::Update() {
+	int move = 0;
+	if (GetAsyncKeyState('A') && 0x8000) {
+		MoveLeft();
+		move--;
+	}
+	if (GetAsyncKeyState('D') && 0x8000) {
+		MoveRight();
+		move++;
+	}
+
+	if (defaultReset && move == 0) {
+		MoveDefault();
+	}
+	prevMove = move; 
+}
+
 //move one rail up or down sequence of rails
 void Player::MoveLeft()
 {

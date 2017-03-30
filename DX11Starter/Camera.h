@@ -19,5 +19,7 @@ private:
 	XMFLOAT3 _direction;
 	float _xRot;
 	float _yRot;
+
+	bool _userControlled=false;
 };
 

@@ -12,6 +12,8 @@
 #include <vector>
 #include <fmod_common.h>
 #include <fmod.hpp>
+#include "Player.h"
+#include "Rail.h"
 
 class Game 
 	: public DXCore
@@ -60,6 +62,8 @@ private:
 	POINT prevMousePos;
 
 	Camera* camera;
+
+	Player* player;
 
 	// FMOD handles
 	FMOD::System* system;
