@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Vertex.h"
 #include "WICTextureLoader.h"
+#include <fmod_errors.h>
 
 // For the DirectX Math library
 using namespace DirectX;
@@ -21,6 +22,7 @@ Game::Game(HINSTANCE hInstance)
 		720,			   // Height of the window's client area
 		true)			   // Show extra stats (fps) in title bar?
 {
+	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 	// Initialize fields
 	meshes = std::vector<Mesh*>();
 	entities = std::vector<Entity*>();
@@ -28,6 +30,31 @@ Game::Game(HINSTANCE hInstance)
 	vertexShader = 0;
 	pixelShader = 0;
 	camera = new Camera(width, height);
+
+	FMOD_RESULT res;
+	res = FMOD::System_Create(&system);
+	if (res != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", res, FMOD_ErrorString(res));
+		exit(-1);
+	}
+
+	res = system->init(512, FMOD_INIT_NORMAL, 0);    // Initialize FMOD.
+	if (res != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", res, FMOD_ErrorString(res));
+		exit(-1);
+	}
+
+	res = system->createStream("Assets/Sounds/Goin' Under.ogg", FMOD_CREATESTREAM, nullptr, &song);
+	if (res != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", res, FMOD_ErrorString(res));
+		exit(-1);
+	}
+
+	res = system->playSound(song, nullptr, true, &songChannel);
+	songChannel->setVolume(0.5f);
 
 #if defined(DEBUG) || defined(_DEBUG)
 	// Do we want a console window?  Probably only in debug mode
@@ -61,6 +88,9 @@ Game::~Game()
 
 	delete vertexShader;
 	delete pixelShader;
+
+	song->release();
+	system->release();
 
 	entities.~vector();
 	meshes.~vector();
@@ -377,10 +407,18 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
+	system->update();
 	camera->Update(deltaTime);
 	// Quit if the escape key is pressed
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
+
+	bool songNotStarted;
+	songChannel->getPaused(&songNotStarted);
+
+	if (totalTime >= 5.0f && songNotStarted) {
+		songChannel->setPaused(false);
+	}
 
 	float sinTime = abs(sinf(totalTime));
 	float cosTime = abs(cosf(totalTime));
