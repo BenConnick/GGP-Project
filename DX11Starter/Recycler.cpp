@@ -40,4 +40,14 @@ void Recycler::Activate(Entity* object) {
 	object->Activate();
 };
 
+// returns a fresh object
+Entity* Recycler::Reactivate() {
+	for (int i = 0; i < objects.size(); i++) {
+		if (!objects[i]->IsActive()) {
+			objects[i]->Activate();
+			return objects[i];
+		}
+	}
+}
+
 // NEXT: activate a type of object (such as "note block")

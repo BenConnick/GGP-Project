@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Vertex.h"
 #include "WICTextureLoader.h"
+#include "Recycler.h"
 #include <fmod_errors.h>
 
 // For the DirectX Math library
@@ -240,27 +241,36 @@ void Game::CreateBasicGeometry()
 	materials.push_back(woodMaterial);
 
 	Entity* ent1 = new Entity(cone, defMaterial);
-	entities.push_back(ent1);
+	//entities.push_back(ent1);
 
 	Entity* ent2 = new Entity(cube, woodMaterial);
 	ent2->SetPosition(XMFLOAT3(-2, 0, 0));
-	entities.push_back(ent2);
+	//entities.push_back(ent2);
 
 	Entity* ent3 = new Entity(cylinder, woodMaterial);
 	ent3->SetPosition(XMFLOAT3(2, 0, 0));
-	entities.push_back(ent3);
+	//entities.push_back(ent3);
 
 	Entity* ent4 = new Entity(helix, woodMaterial);
 	ent4->SetPosition(XMFLOAT3(0, 2, 0));
-	entities.push_back(ent4);
+	//entities.push_back(ent4);
 
 	Entity* ent5 = new Entity(sphere, defMaterial);
 	ent5->SetPosition(XMFLOAT3(0, -2, 0));
-	entities.push_back(ent5);
+	//entities.push_back(ent5);
 
 	Entity* ent6 = new Entity(torus, defMaterial);
 	ent6->SetPosition(XMFLOAT3(0, 0, 2));
-	entities.push_back(ent6);
+	//entities.push_back(ent6);
+
+	// create a dozen test objects
+	for (int i = 0; i < 12; i++) {
+		// create a new entity
+		entities.push_back(new Entity(meshes[0], materials[0]));
+		// put it in the recycler
+		Recycler::GetInstance().Deactivate(entities[entities.size() - 1]);
+	}
+
 	//// Create some temporary variables to represent colors
 	//// - Not necessary, just makes things more readable
 	//XMFLOAT3 genericNormal = XMFLOAT3(0, 0, -1);
@@ -424,25 +434,43 @@ void Game::Update(float deltaTime, float totalTime)
 	float cosTime = abs(cosf(totalTime));
 
 	//entities[0]->SetScale(XMFLOAT3(sinTime, sinTime, sinTime));
-	entities[1]->SetRotation(XMFLOAT3(0, 0, totalTime / 2));
+	//entities[1]->SetRotation(XMFLOAT3(0, 0, totalTime / 2));
 	//entities[1]->MoveForward();
-	entities[3]->SetRotation(XMFLOAT3(0, totalTime / 2, 0));
+	//entities[3]->SetRotation(XMFLOAT3(0, totalTime / 2, 0));
 	//entities[3]->MoveForward();
-	entities[2]->SetRotation(XMFLOAT3(0, 0, -totalTime));
+	//entities[2]->SetRotation(XMFLOAT3(0, 0, -totalTime));
 	//entities[2]->SetScale(XMFLOAT3(cosTime, cosTime, cosTime));
-	entities[4]->SetRotation(XMFLOAT3(0, 0, totalTime));
+	//entities[4]->SetRotation(XMFLOAT3(0, 0, totalTime));
 	//entities[4]->SetScale(XMFLOAT3(cosTime, cosTime, cosTime));
 
 	// timer
 	myTimer += deltaTime;
 
+	for (int i = 0; i < noteMarkers.size(); i++) {
+		if (noteMarkers[i]->IsActive()) {
+			XMFLOAT3 p = noteMarkers[i]->GetPosition();
+			noteMarkers[i]->SetPosition(XMFLOAT3(p.x,p.y-deltaTime*5,p.z));
+		}
+	}
+
 	// create entities dynamically
 	float max = 0.2;
 	if (myTimer > max) {
+		counter++;
 		myTimer -= max;
-		entities.push_back(new Entity(meshes[0], materials[0]));
+		//entities.push_back(new Entity(meshes[0], materials[0]));
 		// FOR DEMONSTRATION ONLY
-		entities[entities.size() - 1]->SetPosition(XMFLOAT3(parser.GetNote(entities.size()+10), entities.size() / 10.0,0));
+		// remove old
+		if (noteMarkers.size() > 2) {
+			Recycler::GetInstance().Deactivate(noteMarkers.back());
+			noteMarkers.pop_back();
+		}
+		// new at front
+		Entity* e = Recycler::GetInstance().Reactivate();
+		noteMarkers.insert(noteMarkers.begin(), e);
+		e->SetPosition(XMFLOAT3(parser.GetNote(counter + 10), 3, 0));
+		//entities[entities.size() - 1]->
+
 	}
 }
 
@@ -516,6 +544,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	}*/
 
 	for (auto entity : entities) {
+		if (!entity->IsActive()) continue;
 		Mesh* mesh = entity->GetMesh();
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;

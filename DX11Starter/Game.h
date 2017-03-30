@@ -70,7 +70,10 @@ private:
 	DirectionalLight dirLight2;
 
 	// temporary
-	float myTimer;
+	float myTimer = 0.0;
+	int counter = 0;
+	vector<Entity*> noteMarkers;
 	SMParser parser = SMParser();
+	// ----
 };
 

@@ -24,6 +24,7 @@ public:
 	Material* GetMaterial();
 	void Activate();
 	void Deactivate();
+	bool IsActive();
 	void PrepareMaterial(XMFLOAT4X4, XMFLOAT4X4, DirectionalLight, DirectionalLight);
 private:
 	bool active;

@@ -117,3 +117,7 @@ void Entity::Activate() {
 void Entity::Deactivate() {
 	active = false;
 }
+
+bool Entity::IsActive() {
+	return active;
+}
