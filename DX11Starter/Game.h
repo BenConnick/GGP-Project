@@ -9,6 +9,8 @@
 #include "Material.h"
 #include <DirectXMath.h>
 #include <vector>
+#include <fmod_common.h>
+#include <fmod.hpp>
 
 class Game 
 	: public DXCore
@@ -57,6 +59,11 @@ private:
 	POINT prevMousePos;
 
 	Camera* camera;
+
+	// FMOD handles
+	FMOD::System* system;
+	FMOD::Sound* song;
+	FMOD::Channel* songChannel;
 
 	DirectionalLight dirLight;
 	DirectionalLight dirLight2;
