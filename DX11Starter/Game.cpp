@@ -239,7 +239,7 @@ void Game::CreateBasicGeometry()
 	materials.push_back(defMaterial);
 	Material* woodMaterial = new Material(vertexShader, pixelShader, woodTex, sampler);
 	materials.push_back(woodMaterial);
-
+	/*
 	Entity* ent1 = new Entity(cone, defMaterial);
 	//entities.push_back(ent1);
 
@@ -262,20 +262,30 @@ void Game::CreateBasicGeometry()
 	Entity* ent6 = new Entity(torus, defMaterial);
 	ent6->SetPosition(XMFLOAT3(0, 0, 2));
 	//entities.push_back(ent6);
-
+	*/
 	Entity* playerEnt = new Entity(sphere, defMaterial);
 	playerEnt->Activate();
 	Rail** rails = new Rail*[Player::railCount];
 	for (int i = 0; i < Player::railCount; i++) {
 		Entity* railEnt = new Entity(cube, defMaterial);
 		railEnt->SetPosition({1*i - 1.0f,-1.0f,0.0f});
-		railEnt->SetScale({ 0.1f, 0.1f, 50.0f });
+		railEnt->SetScale({ 0.1f, 0.1f, 200.0f });
 		railEnt->Activate();
 		rails[i] = new Rail(railEnt);
 		entities.push_back(railEnt);
 	}
 	player = new Player(playerEnt, rails);
 	entities.push_back(playerEnt);
+
+	nodeManager = new MusicNodeManager(rails, cube, woodMaterial);
+	for (int j = 1; j < 7; j++) {
+		Entity* nodeEnt = new Entity(cube, woodMaterial);
+		nodeManager->AddNode(nodeEnt, j % 3, j*1.0f);
+		nodeEnt->SetScale({ 0.5f,0.5f,0.5f });
+
+		nodeEnt->Activate();
+		entities.push_back(nodeEnt);
+	}
 
 	/*
 	// create a dozen test objects
@@ -472,6 +482,7 @@ void Game::Update(float deltaTime, float totalTime)
 
 
 	player->Update();
+	nodeManager->Update(deltaTime);
 	/*
 	// create entities dynamically
 	float max = 0.2;

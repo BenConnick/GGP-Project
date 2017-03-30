@@ -19,6 +19,6 @@ XMFLOAT3 Rail::GetAttachPoint()
 XMFLOAT3 Rail::GetAttachPoint(float t)
 {
 	XMFLOAT3 pos = entity->GetPosition();
-	XMFLOAT3 point = { pos.x,pos.y+t,pos.z };
+	XMFLOAT3 point = { pos.x,pos.y,pos.z+t*20 };
 	return point;
 }

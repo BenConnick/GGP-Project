@@ -14,6 +14,7 @@
 #include <fmod.hpp>
 #include "Player.h"
 #include "Rail.h"
+#include "MusicNodeManager.h"
 
 class Game 
 	: public DXCore
@@ -64,6 +65,7 @@ private:
 	Camera* camera;
 
 	Player* player;
+	MusicNodeManager* nodeManager;
 
 	// FMOD handles
 	FMOD::System* system;

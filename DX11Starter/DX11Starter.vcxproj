@@ -135,6 +135,8 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MusicNode.cpp" />
+    <ClCompile Include="MusicNodeManager.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Rail.cpp" />
     <ClCompile Include="Recycler.cpp" />
@@ -148,6 +150,8 @@
     <ClInclude Include="Lights.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MusicNode.h" />
+    <ClInclude Include="MusicNodeManager.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Rail.h" />
     <ClInclude Include="Recycler.h" />
