@@ -35,6 +35,10 @@ void Player::Update() {
 	prevMove = move; 
 }
 
+int Player::GetRail() {
+	return currentRail;
+}
+
 //move one rail up or down sequence of rails
 void Player::MoveLeft()
 {
