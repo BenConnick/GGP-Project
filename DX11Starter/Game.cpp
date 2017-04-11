@@ -273,11 +273,12 @@ void Game::CreateBasicGeometry()
 		railEnt->Activate();
 		rails[i] = new Rail(railEnt);
 		entities.push_back(railEnt);
-	}
-	player = new Player(playerEnt, rails);
+	} 
+	RailSet* rs = new RailSet(rails);
+	player = new Player(playerEnt, rs);
 	entities.push_back(playerEnt);
 
-	nodeManager = new MusicNodeManager(rails, cube, woodMaterial);
+	nodeManager = new MusicNodeManager(player, rs, cube, woodMaterial);
 	for (int j = 1; j < 7; j++) {
 		Entity* nodeEnt = new Entity(cube, woodMaterial);
 		nodeManager->AddNode(nodeEnt, j % 3, j*1.0f);

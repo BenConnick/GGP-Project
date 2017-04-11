@@ -2,8 +2,9 @@
 
 
 
-MusicNodeManager::MusicNodeManager(Rail** r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial)
+MusicNodeManager::MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial)
 {
+	player = p;
 	nodes = std::vector<MusicNode*>();
 	rails = r;
 	nodeMesh = defaultNodeMesh;
@@ -30,11 +31,19 @@ void MusicNodeManager::AddNode(Entity * e, int rail, float time)
 void MusicNodeManager::Update(float deltaTime)
 {
 	for(auto node : nodes){
-	//for (int i = 0; i < nodes.size; i++) {
+		if (node == NULL) { break; }
 		node->Update(deltaTime);
 
 		//for the time being we will reset time on nodes so that they loop infinitely
 		if (node->GetTime() <= 0.0f) {
+			//check for intersection
+			if (player != NULL) {
+				if (node->GetCurrentRail() == player->GetCurrentRail()) {
+					//intersection
+					printf("Intersection");
+					
+				}
+			}
 			node->SetTime(6.0f);
 		}
 		//later we will remove nodes instead

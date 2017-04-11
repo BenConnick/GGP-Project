@@ -3,7 +3,7 @@
 
 #pragma once
 
-Player::Player(Entity* e, Rail** r)
+Player::Player(Entity* e, RailSet* r)
 {
 	entity = e;
 	rails = r;
@@ -36,7 +36,7 @@ void Player::MoveLeft()
 {
 	if (currentRail > 0) {
 		currentRail--;
-		entity->SetPosition(rails[currentRail]->GetAttachPoint());
+		entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint());
 	}
 }
 
@@ -44,11 +44,11 @@ void Player::MoveRight()
 {
 	if (currentRail < railCount-1) {
 		currentRail++;
-		entity->SetPosition(rails[currentRail]->GetAttachPoint());
+		entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint());
 	}
 }
 void Player::MoveDefault()
 {
 	currentRail = defaultRail;
-	entity->SetPosition(rails[currentRail]->GetAttachPoint());
+	entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint());
 }

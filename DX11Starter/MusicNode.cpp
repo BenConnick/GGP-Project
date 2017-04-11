@@ -2,7 +2,7 @@
 
 
 
-MusicNode::MusicNode(Entity* e, Rail** r, float t, int currentR)
+MusicNode::MusicNode(Entity* e, RailSet* r, float t, int currentR)
 {
 	rails = r;
 	entity = e;
@@ -20,7 +20,10 @@ float MusicNode::GetTime()
 {
 	return time;
 }
-
+int MusicNode::GetCurrentRail()
+{
+	return currentRail;
+}
 void MusicNode::SetTime(float t)
 {
 	time = t;
@@ -29,5 +32,5 @@ void MusicNode::SetTime(float t)
 void MusicNode::Update(float deltaTime)
 {
 	time -= deltaTime;
-	entity->SetPosition(rails[currentRail]->GetAttachPoint(time));
+	entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint(time));
 }
