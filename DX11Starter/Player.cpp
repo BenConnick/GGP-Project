@@ -14,9 +14,9 @@ Player::Player(Entity* e, RailSet* r)
 
 Player::~Player()
 {
-	/*for (int i = 0; i < railCount; i++) {
+	for (int i = 0; i < railCount; i++) {
 		delete rails[i];
-	}*/
+	}
 	delete rails;
 }
 

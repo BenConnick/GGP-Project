@@ -96,7 +96,7 @@ Game::~Game()
 	delete vertexShader;
 	delete pixelShader;
 
-	//delete fft;
+	delete fft;
 
 	dsp->release();
 	song->release();
