@@ -115,7 +115,7 @@ void Entity::PrepareTerrainMaterial(XMFLOAT4X4 view, XMFLOAT4X4 projection, floa
 	vs->SetMatrix4x4("view", view);
 	vs->SetMatrix4x4("projection", projection);
 	vs->SetMatrix4x4("world", _worldMatrix);
-	vs->SetData("amplitudes", frequencies, sizeof(float) * length);
+	bool result = vs->SetData("amplitudes", frequencies, sizeof(float) * length);
 	vs->CopyAllBufferData();
 	SimplePixelShader* ps = _material->GetPixelShader();
 	ps->SetData("light", &light, sizeof(DirectionalLight));

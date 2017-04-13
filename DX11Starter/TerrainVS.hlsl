@@ -66,7 +66,9 @@ VertexToPixel main(VertexShaderInput input)
 
 	matrix newWorld = world;
 
-	newWorld[3][1] += amplitudes[input.id];
+	uint newid = input.id % 32;
+
+	newWorld[3][1] += amplitudes[newid];
 
 	// The vertex's position (input.position) must be converted to world space,
 	// then camera space (relative to our 3D camera), then to proper homogenous 
