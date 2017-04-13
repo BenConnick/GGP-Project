@@ -70,6 +70,7 @@ Entity* Recycler::Reactivate() {
 			return objects[i];
 		}
 	}
+	return NULL;
 }
 
 // returns a fresh musicNode
@@ -80,6 +81,7 @@ MusicNode* Recycler::ReactivateNode() {
 			return nodes[i];
 		}
 	}
+	return NULL;
 }
 
 // NEXT: activate a type of object (such as "note block")

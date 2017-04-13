@@ -18,11 +18,18 @@ MusicNodeManager::~MusicNodeManager()
 {
 }
 
+//places a node on given rail at given time-position
+//attempts to recycle a node or else initializes a new one
 void MusicNodeManager::AddNode(int rail, float time)
 {
-
-	Entity* e = new Entity(nodeMesh,nodeMat);
-	AddNode(e, rail, time);
+	MusicNode* node = recycler->ReactivateNode();
+	if (node == NULL) {
+		Entity* e = new Entity(nodeMesh, nodeMat);
+		node = new MusicNode(e, rails, time, rail);
+		entities->push_back(e);
+	}
+	node->GetEntity()->Activate();
+	nodes.push_back(node);
 }
 
 void MusicNodeManager::AddNode(Entity * e, int rail, float time)

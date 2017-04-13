@@ -28,6 +28,7 @@ private:
 	Mesh* nodeMesh;
 	Material* nodeMat;
 
+	std::vector<Entity*>* entities;
 	Recycler* recycler;
 };
 
