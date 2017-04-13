@@ -11,7 +11,7 @@
 class MusicNodeManager
 {
 public:
-	MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial);
+	MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial, std::vector<Entity*>* e);
 	~MusicNodeManager();
 
 	void AddNode(int rail, float time);

@@ -239,55 +239,16 @@ void Game::CreateBasicGeometry()
 	materials.push_back(defMaterial);
 	Material* woodMaterial = new Material(vertexShader, pixelShader, woodTex, sampler);
 	materials.push_back(woodMaterial);
-	/*
-	Entity* ent1 = new Entity(cone, defMaterial);
-	//entities.push_back(ent1);
-
-	Entity* ent2 = new Entity(cube, woodMaterial);
-	ent2->SetPosition(XMFLOAT3(-2, 0, 0));
-	//entities.push_back(ent2);
-
-	Entity* ent3 = new Entity(cylinder, woodMaterial);
-	ent3->SetPosition(XMFLOAT3(2, 0, 0));
-	//entities.push_back(ent3);
-
-	Entity* ent4 = new Entity(helix, woodMaterial);
-	ent4->SetPosition(XMFLOAT3(0, 2, 0));
-	//entities.push_back(ent4);
-
-	Entity* ent5 = new Entity(sphere, defMaterial);
-	ent5->SetPosition(XMFLOAT3(0, -2, 0));
-	//entities.push_back(ent5);
-
-	Entity* ent6 = new Entity(torus, defMaterial);
-	ent6->SetPosition(XMFLOAT3(0, 0, 2));
-	//entities.push_back(ent6);
-	*/
 	Entity* playerEnt = new Entity(sphere, defMaterial);
 	playerEnt->Activate();
-	/*
-	Rail** rails = new Rail*[RailSet::railCount];
-	for (int i = 0; i < RailSet::railCount; i++) {
-		Entity* railEnt = new Entity(cube, defMaterial);
-		railEnt->SetPosition({1*i - 1.0f,-1.0f,0.0f});
-		railEnt->SetScale({ 0.1f, 0.1f, 200.0f });
-		railEnt->Activate();
-		rails[i] = new Rail(railEnt);
-		entities.push_back(railEnt);
-	} 
-	RailSet* rs = new RailSet(rails);
-	*/
 	RailSet* rs = new RailSet(cube,defMaterial,&entities);
 	player = new Player(playerEnt, rs);
 	entities.push_back(playerEnt);
 
-	nodeManager = new MusicNodeManager(player, rs, cube, woodMaterial);
+	nodeManager = new MusicNodeManager(player, rs, cube, woodMaterial,&entities);
 	for (int j = 1; j < 7; j++) {
 		Entity* nodeEnt = new Entity(cube, woodMaterial);
-		nodeManager->AddNode(nodeEnt, j % 3, j*1.0f);
-
-		nodeEnt->Activate();
-		entities.push_back(nodeEnt);
+		nodeManager->AddNode(j% 3, j*1.0f);
 	}
 
 	/*

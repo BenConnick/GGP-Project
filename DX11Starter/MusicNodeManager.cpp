@@ -2,7 +2,7 @@
 
 
 
-MusicNodeManager::MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial)
+MusicNodeManager::MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial, std::vector<Entity*>* e)
 {
 
 	recycler = &Recycler::GetInstance();
@@ -11,6 +11,7 @@ MusicNodeManager::MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh,
 	rails = r;
 	nodeMesh = defaultNodeMesh;
 	nodeMat = defaultNodeMaterial;
+	entities = e;
 }
 
 
@@ -72,7 +73,6 @@ void MusicNodeManager::Update(float deltaTime)
 				nodes[i+j] = nodes[i+j+1];
 			}
 			nodes.pop_back();
-			//node->SetTime(6.0f);
 		}
 		//later we will remove nodes instead
 	}
