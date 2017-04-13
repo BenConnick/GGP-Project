@@ -53,6 +53,7 @@ Game::Game(HINSTANCE hInstance)
 		printf("FMOD error! (%d) %s\n", res, FMOD_ErrorString(res));
 		exit(-1);
 	}
+	system->getMasterChannelGroup(&mastergroup);
 
 	res = system->playSound(song, nullptr, true, &songChannel);
 	songChannel->setVolume(0.5f);
@@ -313,9 +314,23 @@ void Game::Update(float deltaTime, float totalTime)
 
 	bool songNotStarted;
 	songChannel->getPaused(&songNotStarted);
+	FMOD_RESULT res;
+	float dfft;
 
 	if (totalTime >= 5.0f && songNotStarted) {
 		songChannel->setPaused(false);
+		system->createDSPByType(FMOD_DSP_TYPE_FFT, &dsp);
+		mastergroup->addDSP(0, dsp);
+		dsp->setActive(true);
+		dsp->setParameterInt(FMOD_DSP_FFT_WINDOWTYPE, FMOD_DSP_FFT_WINDOW_TRIANGLE);
+		dsp->setParameterInt(FMOD_DSP_FFT_WINDOWSIZE, 128);
+	}
+	if (!songNotStarted) {
+		res = dsp->getParameterData(FMOD_DSP_FFT_SPECTRUMDATA, (void**)&fft, 0, 0, 0);
+		dsp->getParameterFloat(FMOD_DSP_FFT_DOMINANT_FREQ, &dfft, 0, 0);
+	}
+	if (totalTime >= 15.0f) {
+		//DebugBreak();
 	}
 
 	float sinTime = abs(sinf(totalTime));

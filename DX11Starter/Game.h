@@ -16,7 +16,7 @@
 #include "Rail.h"
 #include "MusicNodeManager.h"
 
-class Game 
+class Game
 	: public DXCore
 {
 
@@ -32,14 +32,14 @@ public:
 	void Draw(float deltaTime, float totalTime);
 
 	// Overridden mouse input helper methods
-	void OnMouseDown (WPARAM buttonState, int x, int y);
-	void OnMouseUp	 (WPARAM buttonState, int x, int y);
-	void OnMouseMove (WPARAM buttonState, int x, int y);
-	void OnMouseWheel(float wheelDelta,   int x, int y);
+	void OnMouseDown(WPARAM buttonState, int x, int y);
+	void OnMouseUp(WPARAM buttonState, int x, int y);
+	void OnMouseMove(WPARAM buttonState, int x, int y);
+	void OnMouseWheel(float wheelDelta, int x, int y);
 private:
 
 	// Initialization helper methods - feel free to customize, combine, etc.
-	void LoadShaders(); 
+	void LoadShaders();
 	void CreateMatrices();
 	void CreateBasicGeometry();
 
@@ -69,8 +69,11 @@ private:
 
 	// FMOD handles
 	FMOD::System* system;
+	FMOD::ChannelGroup* mastergroup;
 	FMOD::Sound* song;
 	FMOD::Channel* songChannel;
+	FMOD::DSP* dsp;
+	FMOD_DSP_PARAMETER_FFT* fft;
 
 	DirectionalLight dirLight;
 	DirectionalLight dirLight2;
