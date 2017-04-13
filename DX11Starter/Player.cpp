@@ -3,10 +3,12 @@
 
 #pragma once
 
-Player::Player(Entity* e, Rail** r)
+Player::Player(Entity* e, RailSet* r)
 {
 	entity = e;
 	rails = r;
+
+	entity->SetScale({ defaultScale,defaultScale,defaultScale });
 }
 
 
@@ -18,8 +20,10 @@ Player::~Player()
 	delete rails;
 }
 
-void Player::Update() {
-	int move = 0;
+void Player::Update(float deltaTime) {
+	int move = 0; //sum movement, if both left and right are held, it averages out
+
+	//left and right user input
 	if (GetAsyncKeyState('A') && 0x8000) {
 		MoveLeft();
 		move--;
@@ -28,11 +32,22 @@ void Player::Update() {
 		MoveRight();
 		move++;
 	}
-
+	//revert to default rail when not moving
 	if (defaultReset && move == 0) {
 		MoveDefault();
 	}
 	prevMove = move; 
+
+	//apply scaling when necessary
+	if (currentScale != defaultScale) {
+		currentScale -= deltaTime * animationSpeed;
+		if (currentScale < defaultScale) { currentScale = defaultScale; }
+		entity->SetScale({ currentScale,currentScale,currentScale });
+	}
+}
+
+void Player::Hit() {
+	currentScale += 1.0f;
 }
 
 int Player::GetRail() {
@@ -44,19 +59,19 @@ void Player::MoveLeft()
 {
 	if (currentRail > 0) {
 		currentRail--;
-		entity->SetPosition(rails[currentRail]->GetAttachPoint());
+		entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint());
 	}
 }
-
 void Player::MoveRight()
 {
-	if (currentRail < railCount-1) {
+	if (currentRail < RailSet::railCount-1) {
 		currentRail++;
-		entity->SetPosition(rails[currentRail]->GetAttachPoint());
+		entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint());
 	}
 }
+//reset to default rail
 void Player::MoveDefault()
 {
 	currentRail = defaultRail;
-	entity->SetPosition(rails[currentRail]->GetAttachPoint());
+	entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint());
 }

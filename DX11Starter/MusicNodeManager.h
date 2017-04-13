@@ -1,14 +1,17 @@
 #pragma once
 #include "Mesh.h"
 #include "Entity.h"
+#include "Player.h"
+#include "RailSet.h"
 #include "Rail.h"
 #include "MusicNode.h"
-#include "MAterial.h"
+#include "Material.h"
+#include "Recycler.h"
 
 class MusicNodeManager
 {
 public:
-	MusicNodeManager(Rail** r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial);
+	MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial, std::vector<Entity*>* e);
 	~MusicNodeManager();
 
 	void AddNode(int rail, float time);
@@ -17,9 +20,15 @@ public:
 	void RemoveNode(int index);
 private:
 	std::vector<MusicNode*> nodes;
-	Rail** rails;
+	RailSet* rails;
 
+	Player* player;
+
+	//default resources for creating generic musicnodes
 	Mesh* nodeMesh;
 	Material* nodeMat;
+
+	std::vector<Entity*>* entities;
+	Recycler* recycler;
 };
 
