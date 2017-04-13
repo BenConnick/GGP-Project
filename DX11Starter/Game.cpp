@@ -80,6 +80,9 @@ Game::~Game()
 		delete entity;
 	}
 
+	delete testCube1;
+	delete testCube2;
+
 	for (auto material : materials) {
 		delete material;
 	}
@@ -93,7 +96,11 @@ Game::~Game()
 	delete vertexShader;
 	delete pixelShader;
 
+	delete fft;
+
+	dsp->release();
 	song->release();
+	mastergroup->release();
 	system->release();
 
 	entities.~vector();
@@ -143,6 +150,10 @@ void Game::LoadShaders()
 	pixelShader = new SimplePixelShader(device, context);
 	if (!pixelShader->LoadShaderFile(L"x64/Debug/PixelShader.cso"))
 		pixelShader->LoadShaderFile(L"PixelShader.cso");
+
+	terrainVS = new SimpleVertexShader(device, context);
+	if (!terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso"))
+		terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso");
 
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
@@ -221,9 +232,11 @@ void Game::CreateBasicGeometry()
 
 	ID3D11ShaderResourceView* metalTex;
 	ID3D11ShaderResourceView* woodTex;
+	ID3D11ShaderResourceView* terrainTex;
 
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/metal.jpg", 0, &metalTex);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &woodTex);
+	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &terrainTex);
 
 	Mesh* cone = new Mesh("Assets/Models/cone.obj", device);
 	meshes.push_back(cone);
@@ -244,6 +257,13 @@ void Game::CreateBasicGeometry()
 	materials.push_back(defMaterial);
 	Material* woodMaterial = new Material(vertexShader, pixelShader, woodTex, sampler);
 	materials.push_back(woodMaterial);
+	Material* dynMaterial = new Material(terrainVS, pixelShader, terrainTex, sampler);
+	materials.push_back(dynMaterial);
+
+	testCube1 = new Entity(sphere, dynMaterial);
+	testCube2 = new Entity(sphere, dynMaterial);
+	testCube1->SetPosition({ -1.0f, 1.0f, 1.0f });
+	testCube2->SetPosition({ 1.0f,1.0f,1.0f });
 
 	Entity* playerEnt = new Entity(car, defMaterial);
 	playerEnt->SetScale({ 0.5f, 0.5f, 0.5f });
@@ -325,10 +345,6 @@ void Game::Update(float deltaTime, float totalTime)
 		dsp->setParameterInt(FMOD_DSP_FFT_WINDOWTYPE, FMOD_DSP_FFT_WINDOW_TRIANGLE);
 		dsp->setParameterInt(FMOD_DSP_FFT_WINDOWSIZE, 128);
 	}
-	if (!songNotStarted) {
-		res = dsp->getParameterData(FMOD_DSP_FFT_SPECTRUMDATA, (void**)&fft, 0, 0, 0);
-		dsp->getParameterFloat(FMOD_DSP_FFT_DOMINANT_FREQ, &dfft, 0, 0);
-	}
 	if (totalTime >= 15.0f) {
 		//DebugBreak();
 	}
@@ -388,6 +404,19 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
+	float freqs[32];
+	memset(freqs, 0, sizeof(float) * 32);
+
+	bool songNotStarted;
+	songChannel->getPaused(&songNotStarted);
+	//get some song data
+	if (!songNotStarted && totalTime >= 6.0f) {
+		dsp->getParameterData(FMOD_DSP_FFT_SPECTRUMDATA, (void**)&fft, 0, 0, 0);
+		for (int i = 0; i < 32; i++) {
+			freqs[i] = fft->spectrum[0][i];
+		}
+	}
+
 	// Background color (Cornflower Blue in this case) for clearing
 	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 
@@ -453,6 +482,23 @@ void Game::Draw(float deltaTime, float totalTime)
 			0);
 	}*/
 
+	Mesh* cubeMesh1 = testCube1->GetMesh();
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	ID3D11Buffer* vba = cubeMesh1->GetVertexBuffer();
+	context->IAGetVertexBuffers(0, 1, &vba, &stride, &offset);
+	context->IASetIndexBuffer(cubeMesh1->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	testCube1->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 32, dirLight, dirLight2);
+	context->DrawIndexed(cubeMesh1->GetIndexCount(), 0, 0);
+
+	Mesh* sphereMesh2 = testCube2->GetMesh();
+	vba = sphereMesh2->GetVertexBuffer();
+	context->IAGetVertexBuffers(0, 1, &vba, &stride, &offset);
+	context->IASetIndexBuffer(sphereMesh2->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	testCube2->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 32, dirLight, dirLight2);
+	context->DrawIndexed(sphereMesh2->GetIndexCount(), 0, 0);
+
+
 	for (auto entity : entities) {
 		if (!entity->IsActive()) continue;
 		Mesh* mesh = entity->GetMesh();
@@ -464,9 +510,6 @@ void Game::Draw(float deltaTime, float totalTime)
 		entity->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), dirLight, dirLight2);
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
-
-
-
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it
 	//  - Do this exactly ONCE PER FRAME (always at the very end of the frame)

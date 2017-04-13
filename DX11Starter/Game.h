@@ -47,11 +47,15 @@ private:
 	std::vector<Mesh*> meshes;
 	std::vector<Entity*> entities;
 	std::vector<Material*> materials;
+	Entity* testCube1;
+	Entity* testCube2;
 
 	// Wrappers for DirectX shaders to provide simplified functionality
 	SimpleVertexShader* vertexShader;
 	SimplePixelShader* pixelShader;
 	ID3D11SamplerState* sampler;
+
+	SimpleVertexShader* terrainVS;
 
 	// The matrices to go from model space to screen space
 	DirectX::XMFLOAT4X4 worldMatrix;
