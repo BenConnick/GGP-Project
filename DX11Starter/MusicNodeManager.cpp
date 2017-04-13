@@ -2,7 +2,7 @@
 
 
 
-MusicNodeManager::MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial, std::vector<Entity*>* e)
+MusicNodeManager::MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial, std::vector<Entity*>* e, SMParser* smp)
 {
 
 	recycler = &Recycler::GetInstance();
@@ -12,6 +12,7 @@ MusicNodeManager::MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh,
 	nodeMesh = defaultNodeMesh;
 	nodeMat = defaultNodeMaterial;
 	entities = e;
+	parser = smp;
 }
 
 
@@ -44,6 +45,30 @@ void MusicNodeManager::AddNode(Entity * e, int rail, float time)
 
 void MusicNodeManager::Update(float deltaTime)
 {
+	myTimer += deltaTime;
+	
+	int numNotes = parser->GetMeasure(parser->measureNum)->size();
+	float secPerBeat = 4 * 60.0 / parser->BPMS;
+
+	// create entities dynamically
+	float max = secPerBeat / numNotes;
+	if (myTimer > max) {
+		counter++;
+		if (counter >= numNotes) {
+			counter = 0;
+			parser->measureNum++;
+		}
+		myTimer -= max;
+
+		// FOR DEMONSTRATION ONLY
+		int value = parser->GetNote(parser->measureNum, counter);
+		printf("%d\n", value);
+		if (value > -1) {
+			// new at front
+			AddNode(value, 100);
+		}
+	}
+
 	//loop through all nodes
 	for(int i = 0; i < nodes.size(); i++){
 		MusicNode* node = nodes[i];

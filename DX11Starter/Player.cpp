@@ -47,7 +47,7 @@ void Player::Update(float deltaTime) {
 }
 
 void Player::Hit() {
-	currentScale += 1.0f;
+	currentScale += 0.5f;
 }
 
 int Player::GetRail() {
