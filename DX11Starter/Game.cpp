@@ -92,6 +92,8 @@ Game::~Game()
 	delete vertexShader;
 	delete pixelShader;
 
+	delete simpleEmitter;
+
 	song->release();
 	system->release();
 
@@ -118,6 +120,9 @@ void Game::Init()
 
 	dirLight2 = { XMFLOAT4(0.1, 0.1, 0.1, 1), XMFLOAT4(1,0.56,0.85,1), XMFLOAT3(-1, 1, 0) };
 
+	// create the particle emitters
+	simpleEmitter = new Emitter(1, materials[0]);
+
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
 	// Essentially: "What kind of shape should the GPU draw with our data?"
@@ -142,6 +147,19 @@ void Game::LoadShaders()
 	pixelShader = new SimplePixelShader(device, context);
 	if (!pixelShader->LoadShaderFile(L"x64/Debug/PixelShader.cso"))
 		pixelShader->LoadShaderFile(L"PixelShader.cso");
+
+	// Load particle shaders
+	particleVS = new SimpleVertexShader(device, context);
+	if (!particleVS->LoadShaderFile(L"Debug/ParticleVS.cso"))
+		particleVS->LoadShaderFile(L"ParticleVS.cso");
+
+	particlePS = new SimplePixelShader(device, context);
+	if (!particlePS->LoadShaderFile(L"Debug/ParticlePS.cso"))
+		particlePS->LoadShaderFile(L"ParticlePS.cso");
+
+	particleGS = new SimpleGeometryShader(device, context);
+	if (!particleGS->LoadShaderFile(L"Debug/ParticleGS.cso"))
+		particleGS->LoadShaderFile(L"ParticleGS.cso");
 
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
@@ -220,9 +238,11 @@ void Game::CreateBasicGeometry()
 
 	ID3D11ShaderResourceView* metalTex;
 	ID3D11ShaderResourceView* woodTex;
+	ID3D11ShaderResourceView* particleTex; // nothing references this yet!!!
 
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/metal.jpg", 0, &metalTex);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &woodTex);
+	CreateWICTextureFromFile(device, context, L"Assets/Textures/SimpleParticle.jpg", 0, &particleTex);
 
 	Mesh* cone = new Mesh("Assets/Models/cone.obj", device);
 	meshes.push_back(cone);
@@ -398,6 +418,10 @@ void Game::Draw(float deltaTime, float totalTime)
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
 
+
+
+	// get emitter buffer
+	ID3D11Buffer* particleBuffer = 0;
 
 
 	// Present the back buffer to the user

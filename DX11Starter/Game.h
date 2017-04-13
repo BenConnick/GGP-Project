@@ -15,6 +15,7 @@
 #include "Player.h"
 #include "Rail.h"
 #include "MusicNodeManager.h"
+#include "ParticleEmitter.h"
 
 class Game 
 	: public DXCore
@@ -81,5 +82,15 @@ private:
 	vector<Entity*> noteMarkers;
 	SMParser parser = SMParser();
 	// ----
+
+	// Effects
+	// Particle stuff
+	ID3D11ShaderResourceView* particleTexture;
+	ID3D11BlendState* particleBlendState;
+	ID3D11DepthStencilState* particleDepthState;
+	Emitter* simpleEmitter;
+	SimpleVertexShader* particleVS;
+	SimplePixelShader* particlePS;
+	SimpleGeometryShader* particleGS;
 };
 
