@@ -17,6 +17,9 @@ MusicNodeManager::MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh,
 
 MusicNodeManager::~MusicNodeManager()
 {
+	for (auto node : nodes) {
+		delete node;
+	}
 }
 
 //places a node on given rail at given time-position

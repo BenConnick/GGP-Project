@@ -32,6 +32,8 @@ public:
 
 	static int CONST defaultRail = 1; //the rail to use when no user input (currently center rail)
 
+	int GetRail();
+
 private:
 	
 	int currentRail = defaultRail; //rail in use

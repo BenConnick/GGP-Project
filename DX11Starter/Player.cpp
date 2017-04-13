@@ -14,6 +14,10 @@ Player::Player(Entity* e, RailSet* r)
 
 Player::~Player()
 {
+	for (int i = 0; i < railCount; i++) {
+		delete rails[i];
+	}
+	delete rails;
 }
 
 void Player::Update(float deltaTime) {
@@ -44,6 +48,10 @@ void Player::Update(float deltaTime) {
 
 void Player::Hit() {
 	currentScale += 1.0f;
+}
+
+int Player::GetRail() {
+	return currentRail;
 }
 
 //move one rail up or down sequence of rails

@@ -84,6 +84,8 @@ Game::~Game()
 	}
 
 	delete camera;
+	delete player;
+	delete nodeManager;
 
 	sampler->Release();
 
@@ -234,152 +236,36 @@ void Game::CreateBasicGeometry()
 	meshes.push_back(sphere);
 	Mesh* torus = new Mesh("Assets/Models/torus.obj", device);
 	meshes.push_back(torus);
+	Mesh* car = new Mesh("Assets/Models/Porsche_911_GT2.obj", device);
+	meshes.push_back(car);
 
 	Material* defMaterial = new Material(vertexShader, pixelShader, metalTex, sampler);
 	materials.push_back(defMaterial);
 	Material* woodMaterial = new Material(vertexShader, pixelShader, woodTex, sampler);
 	materials.push_back(woodMaterial);
-	Entity* playerEnt = new Entity(sphere, defMaterial);
+  
+	Entity* playerEnt = new Entity(car, defMaterial);
+  
 	playerEnt->Activate();
 	RailSet* rs = new RailSet(cube,defMaterial,&entities);
 	player = new Player(playerEnt, rs);
 	entities.push_back(playerEnt);
-
+  
 	nodeManager = new MusicNodeManager(player, rs, cube, woodMaterial,&entities);
+	/*
 	for (int j = 1; j < 7; j++) {
 		Entity* nodeEnt = new Entity(cube, woodMaterial);
 		nodeManager->AddNode(j% 3, j*1.0f);
 	}
-
-	/*
+	*/
+	///*
 	// create a dozen test objects
 	for (int i = 0; i < 12; i++) {
 		// create a new entity
 		entities.push_back(new Entity(meshes[0], materials[0]));
 		// put it in the recycler
 		Recycler::GetInstance().Deactivate(entities[entities.size() - 1]);
-	}*/
-	
-
-
-	//// Create some temporary variables to represent colors
-	//// - Not necessary, just makes things more readable
-	//XMFLOAT3 genericNormal = XMFLOAT3(0, 0, -1);
-	//XMFLOAT2 genericUv = XMFLOAT2(0, 0);
-
-	//// Set up the vertices of the triangle we would like to draw
-	//// - We're going to copy this array, exactly as it exists in memory
-	////    over to a DirectX-controlled data structure (the vertex buffer)
-	//Vertex vertices1[] =
-	//{
-	//	{ XMFLOAT3(+0.0f, +1.0f, +0.0f), genericNormal, genericUv },
-	//	{ XMFLOAT3(+1.5f, -1.0f, +0.0f), genericNormal, genericUv },
-	//	{ XMFLOAT3(-1.5f, -1.0f, +0.0f), genericNormal, genericUv },
-	//};
-
-	//// Set up the indices, which tell us which vertices to use and in which order
-	//// - This is somewhat redundant for just 3 vertices (it's a simple example)
-	//// - Indices are technically not required if the vertices are in the buffer 
-	////    in the correct order and each one will be used exactly once
-	//// - But just to see how it's done...
-	//unsigned int indices1[] = { 0, 1, 2 };
-
-
-	//Mesh* mesh1 = new Mesh(vertices1, 3, indices1, 3, device);
-
-	//meshes.push_back(mesh1);
-
-	//Entity* ent1 = new Entity(mesh1, defMaterial);
-	//Entity* ent2 = new Entity(mesh1, defMaterial);
-	//ent2->SetScale(XMFLOAT3(+0.5f, +0.5f, +0.5f));
-
-	//entities.push_back(ent1);
-	//entities.push_back(ent2);
-
-	//Vertex vertices2[] = {
-	//	{XMFLOAT3(-0.5f, -0.5f, +0.0f), genericNormal, genericUv },
-	//	{XMFLOAT3(-0.5f, +0.5f, +0.0f), genericNormal, genericUv },
-	//	{XMFLOAT3(+0.5f, +0.5f, +0.0f), genericNormal, genericUv },
-	//	{XMFLOAT3(+0.5f, -0.5f, +0.0f), genericNormal, genericUv }
-	//};
-
-	//unsigned int indices2[] = { 0, 1, 2, 2, 3, 0 };
-
-	//Mesh* mesh2 = new Mesh(vertices2, 4, indices2, 6, device);
-
-	//meshes.push_back(mesh2);
-
-	//Entity* ent3 = new Entity(mesh2, defMaterial);
-	//ent3->SetPosition(XMFLOAT3(+1.5f, +1.5f, +0.0f));
-	//Entity* ent4 = new Entity(mesh2, defMaterial);
-
-	//entities.push_back(ent3);
-	//entities.push_back(ent4);
-
-	//Vertex vertices3[] = {
-	//	{XMFLOAT3(+0.0f, +0.0f, +0.0f), genericNormal, genericUv},
-	//	{XMFLOAT3(+0.0f, +1.0f, +0.0f), genericNormal, genericUv},
-	//	{XMFLOAT3(+0.75f, +0.66f, +0.0f), genericNormal, genericUv},
-	//	{XMFLOAT3(+1.0f, +0.0f, +0.0f), genericNormal, genericUv},
-	//	{XMFLOAT3(+0.75f, -0.66f, +0.0f), genericNormal, genericUv},
-	//	{XMFLOAT3(+0.0f, -1.0f, +0.0f), genericNormal, genericUv},
-	//	{XMFLOAT3(-0.75f, -0.66f, +0.0f), genericNormal, genericUv},
-	//	{XMFLOAT3(-1.0f, +0.0f, +0.0f), genericNormal, genericUv},
-	//	{XMFLOAT3(-0.75f, +0.66f, +0.0f), genericNormal, genericUv}
-	//};
-
-	//unsigned int indices3[] = { 0, 1, 2, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 7, 0, 7, 8, 0, 8, 1, 0 };
-
-	//Mesh* mesh3 = new Mesh(vertices3, 9, indices3, 24, device);
-
-	//meshes.push_back(mesh3);
-
-	//Entity* ent5 = new Entity(mesh3, defMaterial);
-	//ent5->SetPosition(XMFLOAT3(-1.5f, +1.5f, +0.0f));
-
-	//entities.push_back(ent5);
-
-	//// Create the VERTEX BUFFER description -----------------------------------
-	//// - The description is created on the stack because we only need
-	////    it to create the buffer.  The description is then useless.
-	//D3D11_BUFFER_DESC vbd;
-	//vbd.Usage				= D3D11_USAGE_IMMUTABLE;
-	//vbd.ByteWidth			= sizeof(Vertex) * 3;       // 3 = number of vertices in the buffer
-	//vbd.BindFlags			= D3D11_BIND_VERTEX_BUFFER; // Tells DirectX this is a vertex buffer
-	//vbd.CPUAccessFlags		= 0;
-	//vbd.MiscFlags			= 0;
-	//vbd.StructureByteStride	= 0;
-
-	//// Create the proper struct to hold the initial vertex data
-	//// - This is how we put the initial data into the buffer
-	//D3D11_SUBRESOURCE_DATA initialVertexData;
-	//initialVertexData.pSysMem = vertices;
-
-	//// Actually create the buffer with the initial data
-	//// - Once we do this, we'll NEVER CHANGE THE BUFFER AGAIN
-	//device->CreateBuffer(&vbd, &initialVertexData, &vertexBuffer);
-
-
-
-	//// Create the INDEX BUFFER description ------------------------------------
-	//// - The description is created on the stack because we only need
-	////    it to create the buffer.  The description is then useless.
-	//D3D11_BUFFER_DESC ibd;
-	//ibd.Usage               = D3D11_USAGE_IMMUTABLE;
-	//ibd.ByteWidth           = sizeof(int) * 3;         // 3 = number of indices in the buffer
-	//ibd.BindFlags           = D3D11_BIND_INDEX_BUFFER; // Tells DirectX this is an index buffer
-	//ibd.CPUAccessFlags      = 0;
-	//ibd.MiscFlags           = 0;
-	//ibd.StructureByteStride = 0;
-
-	//// Create the proper struct to hold the initial index data
-	//// - This is how we put the initial data into the buffer
-	//D3D11_SUBRESOURCE_DATA initialIndexData;
-	//initialIndexData.pSysMem = indices;
-
-	//// Actually create the buffer with the initial data
-	//// - Once we do this, we'll NEVER CHANGE THE BUFFER AGAIN
-	//device->CreateBuffer(&ibd, &initialIndexData, &indexBuffer);
+	}//*/
 }
 
 
@@ -424,49 +310,50 @@ void Game::Update(float deltaTime, float totalTime)
 	float sinTime = abs(sinf(totalTime));
 	float cosTime = abs(cosf(totalTime));
 
-	//entities[0]->SetScale(XMFLOAT3(sinTime, sinTime, sinTime));
-	//entities[1]->SetRotation(XMFLOAT3(0, 0, totalTime / 2));
-	//entities[1]->MoveForward();
-	//entities[3]->SetRotation(XMFLOAT3(0, totalTime / 2, 0));
-	//entities[3]->MoveForward();
-	//entities[2]->SetRotation(XMFLOAT3(0, 0, -totalTime));
-	//entities[2]->SetScale(XMFLOAT3(cosTime, cosTime, cosTime));
-	//entities[4]->SetRotation(XMFLOAT3(0, 0, totalTime));
-	//entities[4]->SetScale(XMFLOAT3(cosTime, cosTime, cosTime));
-
 	// timer
 	myTimer += deltaTime;
 
+	// move notes
 	for (int i = 0; i < noteMarkers.size(); i++) {
 		if (noteMarkers[i]->IsActive()) {
 			XMFLOAT3 p = noteMarkers[i]->GetPosition();
-			noteMarkers[i]->SetPosition(XMFLOAT3(p.x,p.y-deltaTime*5,p.z));
+			noteMarkers[i]->SetPosition(XMFLOAT3(p.x,p.y,p.z - deltaTime * 100));
+			// remove old
+			if (noteMarkers[i]->GetPosition().z < 0) {
+				if (player->GetRail() == noteMarkers[i]->GetPosition().x+1) {
+					cout << "note hit on rail " << player->GetRail() << "! ";
+				}
+				Recycler::GetInstance().Deactivate(noteMarkers.back());
+				noteMarkers.pop_back();
+			}
 		}
 	}
 
-
 	player->Update(deltaTime);
 	nodeManager->Update(deltaTime);
-	/*
+
+	int numNotes = parser.GetMeasure(parser.measureNum)->size();
+	float secPerBeat = 4*60.0 / parser.BPMS;
+
 	// create entities dynamically
-	float max = 0.2;
+	float max = secPerBeat / numNotes;
 	if (myTimer > max) {
 		counter++;
-		myTimer -= max;
-		//entities.push_back(new Entity(meshes[0], materials[0]));
-		// FOR DEMONSTRATION ONLY
-		// remove old
-		if (noteMarkers.size() > 2) {
-			Recycler::GetInstance().Deactivate(noteMarkers.back());
-			noteMarkers.pop_back();
+		if (counter >= numNotes) {
+			counter = 0;
+			parser.measureNum++;
 		}
-		// new at front
-		Entity* e = Recycler::GetInstance().Reactivate();
-		noteMarkers.insert(noteMarkers.begin(), e);
-		e->SetPosition(XMFLOAT3(parser.GetNote(counter + 10), 3, 0));
-		//entities[entities.size() - 1]->
-
-	}*/
+		myTimer -= max;
+		
+		// FOR DEMONSTRATION ONLY
+		int value = parser.GetNote(parser.measureNum, counter);
+		if (value > -1) {
+			// new at front
+			Entity* e = Recycler::GetInstance().Reactivate();
+			noteMarkers.insert(noteMarkers.begin(), e);
+			e->SetPosition(XMFLOAT3(value - 1, -1, 100));
+		}
+	}
 }
 
 // --------------------------------------------------------
@@ -525,7 +412,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	//	0,     // Offset to the first index we want to use
 	//	0);    // Offset to add to each index when looking up vertices
 
-	/*for (auto mesh : meshes) {
+	/*
+	//for (auto mesh : meshes) {
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
 		ID3D11Buffer* vb = mesh->GetVertexBuffer();
