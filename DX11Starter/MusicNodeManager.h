@@ -7,11 +7,12 @@
 #include "MusicNode.h"
 #include "Material.h"
 #include "Recycler.h"
+#include "SMParser.h"
 
 class MusicNodeManager
 {
 public:
-	MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial, std::vector<Entity*>* e);
+	MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial, std::vector<Entity*>* e, SMParser* smp);
 	~MusicNodeManager();
 
 	void AddNode(int rail, float time);
@@ -24,11 +25,15 @@ private:
 
 	Player* player;
 
+	float myTimer = 0.0f;
+	int counter = 0;
+
 	//default resources for creating generic musicnodes
 	Mesh* nodeMesh;
 	Material* nodeMat;
 
 	std::vector<Entity*>* entities;
 	Recycler* recycler;
+	SMParser* parser;
 };
 
