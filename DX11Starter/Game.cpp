@@ -243,30 +243,19 @@ void Game::CreateBasicGeometry()
 	materials.push_back(defMaterial);
 	Material* woodMaterial = new Material(vertexShader, pixelShader, woodTex, sampler);
 	materials.push_back(woodMaterial);
-
+  
 	Entity* playerEnt = new Entity(car, defMaterial);
-	playerEnt->SetScale({ 0.5f, 0.5f, 0.5f });
+  
 	playerEnt->Activate();
-	Rail** rails = new Rail*[Player::railCount];
-	for (int i = 0; i < Player::railCount; i++) {
-		Entity* railEnt = new Entity(cube, defMaterial);
-		railEnt->SetPosition({1*i - 1.0f,-1.0f,0.0f});
-		railEnt->SetScale({ 0.1f, 0.1f, 200.0f });
-		railEnt->Activate();
-		rails[i] = new Rail(railEnt);
-		entities.push_back(railEnt);
-	}
-	player = new Player(playerEnt, rails);
+	RailSet* rs = new RailSet(cube,defMaterial,&entities);
+	player = new Player(playerEnt, rs);
 	entities.push_back(playerEnt);
+  
+	nodeManager = new MusicNodeManager(player, rs, cube, woodMaterial,&entities);
 	/*
-	nodeManager = new MusicNodeManager(rails, cube, woodMaterial);
 	for (int j = 1; j < 7; j++) {
 		Entity* nodeEnt = new Entity(cube, woodMaterial);
-		nodeManager->AddNode(nodeEnt, j % 3, j*1.0f);
-		nodeEnt->SetScale({ 0.5f,0.5f,0.5f });
-
-		nodeEnt->Activate();
-		entities.push_back(nodeEnt);
+		nodeManager->AddNode(j% 3, j*1.0f);
 	}
 	*/
 	///*
@@ -340,9 +329,8 @@ void Game::Update(float deltaTime, float totalTime)
 		}
 	}
 
-
-	player->Update();
-	//nodeManager->Update(deltaTime);
+	player->Update(deltaTime);
+	nodeManager->Update(deltaTime);
 
 	int numNotes = parser.GetMeasure(parser.measureNum)->size();
 	float secPerBeat = 4*60.0 / parser.BPMS;

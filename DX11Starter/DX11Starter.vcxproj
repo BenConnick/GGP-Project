@@ -139,6 +139,7 @@
     <ClCompile Include="MusicNodeManager.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Rail.cpp" />
+    <ClCompile Include="RailSet.cpp" />
     <ClCompile Include="Recycler.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
   </ItemGroup>
@@ -154,6 +155,7 @@
     <ClInclude Include="MusicNodeManager.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Rail.h" />
+    <ClInclude Include="RailSet.h" />
     <ClInclude Include="Recycler.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="SMParser.h" />
