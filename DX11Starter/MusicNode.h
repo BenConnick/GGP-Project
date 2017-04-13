@@ -20,6 +20,7 @@ public:
 	float GetTime();
 	int GetCurrentRail();
 	void SetTime(float t);
+	void SetRail(int r);
 	NodeState GetState();
 
 	//standard update every frame

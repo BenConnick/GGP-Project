@@ -386,7 +386,7 @@ void Game::Update(float deltaTime, float totalTime)
 			/*
 			Entity* e = Recycler::GetInstance().Reactivate();
 			noteMarkers.insert(noteMarkers.begin(), e);
-			e->SetPosition(XMFLOAT3(value - 1, -1, 100));*/
+			e->SetPosition(XMFLOAT3(value - 1, -1, 100));
 		}
 	}*/
 }
@@ -405,6 +405,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	if (!songNotStarted && totalTime >= 6.0f) {
 		dsp->getParameterData(FMOD_DSP_FFT_SPECTRUMDATA, (void**)&fft, 0, 0, 0);
 		for (int i = 0; i < 32; i++) {
+			if (fft->spectrum[0] == nullptr) break;
 			freqs[i] = fft->spectrum[0][i];
 		}
 	}

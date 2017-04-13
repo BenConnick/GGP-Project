@@ -37,10 +37,14 @@ void MusicNode::SetTime(float t)
 	state = NodeState::LIVE;
 	entity->SetScale({ defaultScale,defaultScale,defaultScale });
 	currentScale = defaultScale;
+}void MusicNode::SetRail(int r)
+{
+	currentRail = r;
 }
 
 void MusicNode::Update(float deltaTime)
 {
+	if (state == NodeState::DEAD) { return; }
 	time -= deltaTime;
 	entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint(time));
 
