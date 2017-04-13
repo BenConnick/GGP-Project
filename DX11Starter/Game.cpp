@@ -265,8 +265,9 @@ void Game::CreateBasicGeometry()
 	*/
 	Entity* playerEnt = new Entity(sphere, defMaterial);
 	playerEnt->Activate();
-	Rail** rails = new Rail*[Player::railCount];
-	for (int i = 0; i < Player::railCount; i++) {
+	/*
+	Rail** rails = new Rail*[RailSet::railCount];
+	for (int i = 0; i < RailSet::railCount; i++) {
 		Entity* railEnt = new Entity(cube, defMaterial);
 		railEnt->SetPosition({1*i - 1.0f,-1.0f,0.0f});
 		railEnt->SetScale({ 0.1f, 0.1f, 200.0f });
@@ -275,6 +276,8 @@ void Game::CreateBasicGeometry()
 		entities.push_back(railEnt);
 	} 
 	RailSet* rs = new RailSet(rails);
+	*/
+	RailSet* rs = new RailSet(cube,defMaterial,&entities);
 	player = new Player(playerEnt, rs);
 	entities.push_back(playerEnt);
 
@@ -282,7 +285,6 @@ void Game::CreateBasicGeometry()
 	for (int j = 1; j < 7; j++) {
 		Entity* nodeEnt = new Entity(cube, woodMaterial);
 		nodeManager->AddNode(nodeEnt, j % 3, j*1.0f);
-		nodeEnt->SetScale({ 0.5f,0.5f,0.5f });
 
 		nodeEnt->Activate();
 		entities.push_back(nodeEnt);
@@ -482,7 +484,7 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 
 
-	player->Update();
+	player->Update(deltaTime);
 	nodeManager->Update(deltaTime);
 	/*
 	// create entities dynamically

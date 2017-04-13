@@ -5,7 +5,8 @@
 #include "RailSet.h"
 #include "Rail.h"
 #include "MusicNode.h"
-#include "MAterial.h"
+#include "Material.h"
+#include "Recycler.h"
 
 class MusicNodeManager
 {
@@ -19,11 +20,14 @@ public:
 	void RemoveNode(int index);
 private:
 	std::vector<MusicNode*> nodes;
-	//Rail** rails;
 	RailSet* rails;
 
 	Player* player;
+
+	//default resources for creating generic musicnodes
 	Mesh* nodeMesh;
 	Material* nodeMat;
+
+	Recycler* recycler;
 };
 
