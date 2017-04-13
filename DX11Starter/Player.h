@@ -36,7 +36,7 @@ private:
 	
 	int currentRail = defaultRail; //rail in use
 
-	float defaultScale = 1.0f;
+	float defaultScale = 0.5f;
 	float currentScale = defaultScale;
 	float const animationSpeed = 8.0f;
 

@@ -7,6 +7,8 @@ Player::Player(Entity* e, RailSet* r)
 {
 	entity = e;
 	rails = r;
+
+	entity->SetScale({ defaultScale,defaultScale,defaultScale });
 }
 
 
@@ -41,7 +43,7 @@ void Player::Update(float deltaTime) {
 }
 
 void Player::Hit() {
-	currentScale = 2.0f;
+	currentScale += 1.0f;
 }
 
 //move one rail up or down sequence of rails
