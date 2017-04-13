@@ -252,13 +252,13 @@ void Game::CreateBasicGeometry()
 	entities.push_back(playerEnt);
   
 	nodeManager = new MusicNodeManager(player, rs, cube, woodMaterial,&entities);
-	/*
+	///*
 	for (int j = 1; j < 7; j++) {
 		Entity* nodeEnt = new Entity(cube, woodMaterial);
 		nodeManager->AddNode(j% 3, j*1.0f);
 	}
-	*/
-	///*
+	//*/
+	/*
 	// create a dozen test objects
 	for (int i = 0; i < 12; i++) {
 		// create a new entity
@@ -313,7 +313,9 @@ void Game::Update(float deltaTime, float totalTime)
 	// timer
 	myTimer += deltaTime;
 
+	//noteMarkers[0] = NULL;
 	// move notes
+	/*
 	for (int i = 0; i < noteMarkers.size(); i++) {
 		if (noteMarkers[i]->IsActive()) {
 			XMFLOAT3 p = noteMarkers[i]->GetPosition();
@@ -327,17 +329,20 @@ void Game::Update(float deltaTime, float totalTime)
 				noteMarkers.pop_back();
 			}
 		}
-	}
+	}*/
 
 	player->Update(deltaTime);
 	nodeManager->Update(deltaTime);
 
 	int numNotes = parser.GetMeasure(parser.measureNum)->size();
 	float secPerBeat = 4*60.0 / parser.BPMS;
-
+	
 	// create entities dynamically
 	float max = secPerBeat / numNotes;
-	if (myTimer > max) {
+	//printf("%f ",myTimer);
+	//printf("%f\n",max);
+	//if (myTimer > max) {
+		//printf("Check\n");
 		counter++;
 		if (counter >= numNotes) {
 			counter = 0;
@@ -347,13 +352,16 @@ void Game::Update(float deltaTime, float totalTime)
 		
 		// FOR DEMONSTRATION ONLY
 		int value = parser.GetNote(parser.measureNum, counter);
+		printf("%d\n",value);
 		if (value > -1) {
 			// new at front
+			nodeManager->AddNode(value, 100);
+			/*
 			Entity* e = Recycler::GetInstance().Reactivate();
 			noteMarkers.insert(noteMarkers.begin(), e);
-			e->SetPosition(XMFLOAT3(value - 1, -1, 100));
+			e->SetPosition(XMFLOAT3(value - 1, -1, 100));*/
 		}
-	}
+	//}
 }
 
 // --------------------------------------------------------
