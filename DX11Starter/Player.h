@@ -1,19 +1,20 @@
 #include "Mesh.h"
 #include "Entity.h"
 #include "Rail.h"
+#include "RailSet.h"
 
 #pragma once
 class Player
 {
 public:
-	Player(Entity* e, Rail** r);
+	Player(Entity* e, RailSet* r);
 	~Player();
 
 	Entity* entity;
 
-	Rail** rails; //pointer to group of rail objects
+	RailSet* rails; //pointer to group of rail objects
 
-	void Update();
+	void Update(float deltaTime);
 
 	//increment rail up or down
 	void MoveLeft();
@@ -21,7 +22,14 @@ public:
 	//return to default rail
 	void MoveDefault();
 
-	static int CONST railCount = 3; // the number of rails in play
+	//player has hit a node
+	void Hit();
+
+	//Getters
+	int GetCurrentRail() {
+		return currentRail;
+	}
+
 	static int CONST defaultRail = 1; //the rail to use when no user input (currently center rail)
 
 	int GetRail();
@@ -29,6 +37,10 @@ public:
 private:
 	
 	int currentRail = defaultRail; //rail in use
+
+	float defaultScale = 0.5f;
+	float currentScale = defaultScale;
+	float const animationSpeed = 8.0f;
 
 	int prevMove; //usable to determine previous move state, and prevent slidng across all rails with a single button press
 	//presently we are going with a 3-rail, middle reset approach, so this is not being used

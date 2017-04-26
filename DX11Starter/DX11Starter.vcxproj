@@ -141,6 +141,7 @@
     <ClCompile Include="ParticleManager.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Rail.cpp" />
+    <ClCompile Include="RailSet.cpp" />
     <ClCompile Include="Recycler.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
   </ItemGroup>
@@ -159,6 +160,7 @@
     <ClInclude Include="ParticleEmitter.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Rail.h" />
+    <ClInclude Include="RailSet.h" />
     <ClInclude Include="Recycler.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="SMParser.h" />
