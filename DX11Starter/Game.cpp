@@ -120,9 +120,6 @@ void Game::Init()
 
 	dirLight2 = { XMFLOAT4(0.1, 0.1, 0.1, 1), XMFLOAT4(1,0.56,0.85,1), XMFLOAT3(-1, 1, 0) };
 
-	// create the particle emitters
-	simpleEmitter = new Emitter(1, materials[0]);
-
 	// Particle states ------------------------
 
 	// Blend state
@@ -145,6 +142,9 @@ void Game::Init()
 	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	device->CreateDepthStencilState(&depthDesc, &particleDepthState);
+
+	// create the particle emitters
+	simpleEmitter = new Emitter(device, particleVS, particlePS, particleGS, particleTexture, sampler, particleBlendState, particleDepthState);
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -171,21 +171,20 @@ void Game::LoadShaders()
 	if (!pixelShader->LoadShaderFile(L"x64/Debug/PixelShader.cso"))
 		pixelShader->LoadShaderFile(L"PixelShader.cso");
 
-	/*
 	// Load particle shaders
 	particleVS = new SimpleVertexShader(device, context);
-	if (!particleVS->LoadShaderFile(L"Debug/ParticleVS.cso"))
+	if (!particleVS->LoadShaderFile(L"x64/Debug/ParticleVS.cso"))
 		particleVS->LoadShaderFile(L"ParticleVS.cso");
 
 	particlePS = new SimplePixelShader(device, context);
-	if (!particlePS->LoadShaderFile(L"Debug/ParticlePS.cso"))
+	if (!particlePS->LoadShaderFile(L"x64/Debug/ParticlePS.cso"))
 		particlePS->LoadShaderFile(L"ParticlePS.cso");
 
 	particleGS = new SimpleGeometryShader(device, context);
-	if (!particleGS->LoadShaderFile(L"Debug/ParticleGS.cso"))
+	if (!particleGS->LoadShaderFile(L"x64/Debug/ParticleGS.cso"))
 		particleGS->LoadShaderFile(L"ParticleGS.cso");
 
-		*/
+	cout << particleGS;
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
 
@@ -263,11 +262,10 @@ void Game::CreateBasicGeometry()
 
 	ID3D11ShaderResourceView* metalTex;
 	ID3D11ShaderResourceView* woodTex;
-	ID3D11ShaderResourceView* particleTex; // nothing references this yet!!!
 
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/metal.jpg", 0, &metalTex);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &woodTex);
-	CreateWICTextureFromFile(device, context, L"Assets/Textures/SimpleParticle.jpg", 0, &particleTex);
+	CreateWICTextureFromFile(device, context, L"Assets/Textures/SimpleParticle.jpg", 0, &particleTexture);
 
 	Mesh* cone = new Mesh("Assets/Models/cone.obj", device);
 	meshes.push_back(cone);
@@ -341,6 +339,7 @@ void Game::Update(float deltaTime, float totalTime)
 {
 	system->update();
 	camera->Update(deltaTime);
+	simpleEmitter->Update(deltaTime);
 	// Quit if the escape key is pressed
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
@@ -434,12 +433,9 @@ void Game::Draw(float deltaTime, float totalTime)
 		entity->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), dirLight, dirLight2);
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
-
-
-
-	// get emitter buffer
-	ID3D11Buffer* particleBuffer = 0;
-
+	
+	// Draw particles
+	simpleEmitter->Draw(context,camera,deltaTime,totalTime);
 
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it
