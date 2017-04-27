@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Vertex.h"
 #include "WICTextureLoader.h"
+#include "DDSTextureLoader.h"
 #include "Recycler.h"
 #include <fmod_errors.h>
 
@@ -96,6 +97,10 @@ Game::~Game()
 	delete vertexShader;
 	delete pixelShader;
 
+	skyboxSRV->Release();
+	delete skyboxVS;
+	delete skyboxPS;
+
 	//delete fft;
 
 	dsp->release();
@@ -131,6 +136,36 @@ void Game::Init()
 	// Essentially: "What kind of shape should the GPU draw with our data?"
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	HRESULT hr = CreateDDSTextureFromFile(device, L"Assets/Textures/skybox3.dds", 0, &skyboxSRV);
+	//printf(hr);
+	//CreateWICTextureFromFile(device, L"Assets/Textures/skybox.dds", 0, &skyboxSRV);
+	
+	// Create a sampler state for texture sampling
+	D3D11_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// Ask the device to create a state
+	device->CreateSamplerState(&samplerDesc, &sampler);
+
+	D3D11_RASTERIZER_DESC rsDesc = {};
+	rsDesc.FillMode = D3D11_FILL_SOLID;
+	rsDesc.CullMode = D3D11_CULL_FRONT;
+	rsDesc.DepthClipEnable = true;
+	device->CreateRasterizerState(&rsDesc, &rsSkybox);
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	device->CreateDepthStencilState(&dsDesc, &dsSkybox);
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	// load song beatmap, print success
 	cout << "songs loaded: " << parser.OpenFile("Assets/Beatmaps/song.sm");
 }
@@ -155,6 +190,12 @@ void Game::LoadShaders()
 	if (!terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso"))
 		terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso");
 
+	skyboxVS = new SimpleVertexShader(device, context);
+	if (!skyboxVS->LoadShaderFile(L"x64/Debug/SkyboxVS.cso"))
+		skyboxVS->LoadShaderFile(L"SkyboxVS.cso");
+	skyboxPS = new SimplePixelShader(device, context);
+	if (!skyboxPS->LoadShaderFile(L"x64/Debug/SkyboxPS.cso")) 
+		skyboxPS->LoadShaderFile(L"SkyboxPS.cso");
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
 
@@ -252,6 +293,8 @@ void Game::CreateBasicGeometry()
 	meshes.push_back(torus);
 	Mesh* car = new Mesh("Assets/Models/Porsche_911_GT2.obj", device);
 	meshes.push_back(car);
+
+	skybox = cube;
 
 	Material* defMaterial = new Material(vertexShader, pixelShader, metalTex, sampler);
 	materials.push_back(defMaterial);
@@ -503,6 +546,32 @@ void Game::Draw(float deltaTime, float totalTime)
 		entity->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), dirLight, dirLight2);
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
+
+
+	//render sky, must occur after all solid objects
+	ID3D11Buffer* skyboxVB = skybox->GetVertexBuffer();
+	ID3D11Buffer* skyboxIB = skybox->GetIndexBuffer();
+
+	context->IASetVertexBuffers(0, 1, &skyboxVB, &stride, &offset);
+	context->IASetIndexBuffer(skyboxIB, DXGI_FORMAT_R32_UINT, 0);
+
+	skyboxVS->SetMatrix4x4("view", camera->GetViewMatrix());
+	skyboxVS->SetMatrix4x4("projection", camera->GetProjectionMatrix());
+	skyboxVS->CopyAllBufferData();
+	skyboxVS->SetShader();
+
+	skyboxPS->SetShaderResourceView("Skybox", skyboxSRV);
+	skyboxPS->SetSamplerState("Sampler", sampler);
+	skyboxPS->CopyAllBufferData();
+	skyboxPS->SetShader();
+
+	context->RSSetState(rsSkybox);
+	context->OMSetDepthStencilState(dsSkybox, 0);
+	context->DrawIndexed(skybox->GetIndexCount(),0,0);
+
+	context->RSSetState(0);
+	context->OMSetDepthStencilState(0, 0);
+
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it
 	//  - Do this exactly ONCE PER FRAME (always at the very end of the frame)

@@ -10,6 +10,7 @@
 #include "SMParser.h"
 #include <DirectXMath.h>
 #include <vector>
+#include <fmod.h>
 #include <fmod_common.h>
 #include <fmod.hpp>
 #include "Player.h"
@@ -56,6 +57,13 @@ private:
 	ID3D11SamplerState* sampler;
 
 	SimpleVertexShader* terrainVS;
+
+	Mesh* skybox;
+	ID3D11ShaderResourceView* skyboxSRV;
+	ID3D11RasterizerState*  rsSkybox;
+	ID3D11DepthStencilState* dsSkybox;
+	SimpleVertexShader* skyboxVS;
+	SimplePixelShader* skyboxPS;
 
 	// The matrices to go from model space to screen space
 	DirectX::XMFLOAT4X4 worldMatrix;
