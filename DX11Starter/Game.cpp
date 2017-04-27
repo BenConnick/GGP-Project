@@ -171,6 +171,7 @@ void Game::LoadShaders()
 	if (!pixelShader->LoadShaderFile(L"x64/Debug/PixelShader.cso"))
 		pixelShader->LoadShaderFile(L"PixelShader.cso");
 
+	/*
 	// Load particle shaders
 	particleVS = new SimpleVertexShader(device, context);
 	if (!particleVS->LoadShaderFile(L"Debug/ParticleVS.cso"))
@@ -184,6 +185,7 @@ void Game::LoadShaders()
 	if (!particleGS->LoadShaderFile(L"Debug/ParticleGS.cso"))
 		particleGS->LoadShaderFile(L"ParticleGS.cso");
 
+		*/
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
 
@@ -395,10 +397,10 @@ void Game::Update(float deltaTime, float totalTime)
 		if (value > -1) {
 			// new at front
 			nodeManager->AddNode(value, 100);
-			/*
-			Entity* e = Recycler::GetInstance().Reactivate();
-			noteMarkers.insert(noteMarkers.begin(), e);
-			e->SetPosition(XMFLOAT3(value - 1, -1, 100));*/
+			
+			//Entity* e = Recycler::GetInstance().Reactivate();
+			//noteMarkers.insert(noteMarkers.begin(), e);
+			//e->SetPosition(XMFLOAT3(value - 1, -1, 100));
 		}
 	}*/
 }
