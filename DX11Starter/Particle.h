@@ -3,7 +3,7 @@
 
 struct Particle
 {
-	int Type = 0;
+	int Type = 1;
 	float Age = 0;
 	DirectX::XMFLOAT3 StartPosition;
 	DirectX::XMFLOAT3 StartVelocity;

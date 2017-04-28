@@ -1,4 +1,5 @@
 #include "ParticleEmitter.h"
+#include <stdlib.h>     /* srand, rand */
 
 Emitter::Emitter(
 	ID3D11Device* device,
@@ -73,6 +74,7 @@ void Emitter::InitializeParticle(int index) {
 	particles[index].Age = 0;
 	particles[index].StartPosition = spawnPos;
 	particles[index].StartColor = particles[index].MidColor = particles[index].EndColor = colorTint;
+	velocity = DirectX::XMFLOAT3((rand() % 100)*0.01, (rand() % 100)*0.01, (rand() % 100)*0.01);
 	particles[index].StartVelocity = velocity;
 	particles[index].StartMidEndSizes = XMFLOAT3(1,1,1);
 }
@@ -86,6 +88,16 @@ void Emitter::Update(float dt) {
 }
 
 void Emitter::Draw(ID3D11DeviceContext* context, Camera* camera, float deltaTime, float totalTime) {
+	// update buffer
+	// All particles copied locally - send whole buffer to GPU
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	context->Map(particleBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+
+	memcpy(mapped.pData, particles, sizeof(Particle) * maxParticles);
+
+	context->Unmap(particleBuffer, 0);
+
+	// shaders
 	particleGS->SetMatrix4x4("world", XMFLOAT4X4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)); // Identity
 	particleGS->SetMatrix4x4("view", camera->GetViewMatrix());
 	particleGS->SetMatrix4x4("projection", camera->GetProjectionMatrix());
@@ -116,7 +128,7 @@ void Emitter::Draw(ID3D11DeviceContext* context, Camera* camera, float deltaTime
 
 	// Draw auto - draws based on current stream out buffer
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-	context->DrawAuto();
+	context->Draw(100,0);
 
 	// Unset Geometry Shader for next frame and reset states
 	context->GSSetShader(0, 0, 0);
