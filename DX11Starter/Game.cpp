@@ -53,6 +53,7 @@ Game::Game(HINSTANCE hInstance)
 		printf("FMOD error! (%d) %s\n", res, FMOD_ErrorString(res));
 		exit(-1);
 	}
+	system->getMasterChannelGroup(&mastergroup);
 
 	res = system->playSound(song, nullptr, true, &songChannel);
 	songChannel->setVolume(0.5f);
@@ -79,6 +80,9 @@ Game::~Game()
 		delete entity;
 	}
 
+	delete testCube1;
+	delete testCube2;
+
 	for (auto material : materials) {
 		delete material;
 	}
@@ -91,10 +95,13 @@ Game::~Game()
 
 	delete vertexShader;
 	delete pixelShader;
-
 	delete simpleEmitter;
 
+	//delete fft;
+
+	dsp->release();
 	song->release();
+	mastergroup->release();
 	system->release();
 
 	entities.~vector();
@@ -185,6 +192,11 @@ void Game::LoadShaders()
 		particleGS->LoadShaderFile(L"ParticleGS.cso");
 
 	cout << particleGS;
+
+	terrainVS = new SimpleVertexShader(device, context);
+	if (!terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso"))
+		terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso");
+
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
 
@@ -262,10 +274,12 @@ void Game::CreateBasicGeometry()
 
 	ID3D11ShaderResourceView* metalTex;
 	ID3D11ShaderResourceView* woodTex;
+	ID3D11ShaderResourceView* terrainTex;
 
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/metal.jpg", 0, &metalTex);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &woodTex);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/SimpleParticle.jpg", 0, &particleTexture);
+	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &terrainTex);
 
 	Mesh* cone = new Mesh("Assets/Models/cone.obj", device);
 	meshes.push_back(cone);
@@ -286,7 +300,14 @@ void Game::CreateBasicGeometry()
 	materials.push_back(defMaterial);
 	Material* woodMaterial = new Material(vertexShader, pixelShader, woodTex, sampler);
 	materials.push_back(woodMaterial);
-  
+	Material* dynMaterial = new Material(terrainVS, pixelShader, terrainTex, sampler);
+	materials.push_back(dynMaterial);
+
+	testCube1 = new Entity(sphere, dynMaterial);
+	testCube2 = new Entity(sphere, dynMaterial);
+	testCube1->SetPosition({ -1.0f, 1.0f, 1.0f });
+	testCube2->SetPosition({ 1.0f,1.0f,1.0f });
+
 	Entity* playerEnt = new Entity(car, defMaterial);
   
 	playerEnt->Activate();
@@ -346,9 +367,19 @@ void Game::Update(float deltaTime, float totalTime)
 
 	bool songNotStarted;
 	songChannel->getPaused(&songNotStarted);
+	FMOD_RESULT res;
+	float dfft;
 
 	if (totalTime >= 5.0f && songNotStarted) {
 		songChannel->setPaused(false);
+		system->createDSPByType(FMOD_DSP_TYPE_FFT, &dsp);
+		mastergroup->addDSP(0, dsp);
+		dsp->setActive(true);
+		dsp->setParameterInt(FMOD_DSP_FFT_WINDOWTYPE, FMOD_DSP_FFT_WINDOW_TRIANGLE);
+		dsp->setParameterInt(FMOD_DSP_FFT_WINDOWSIZE, 128);
+	}
+	if (totalTime >= 15.0f) {
+		//DebugBreak();
 	}
 
 	float sinTime = abs(sinf(totalTime));
@@ -396,10 +427,10 @@ void Game::Update(float deltaTime, float totalTime)
 		if (value > -1) {
 			// new at front
 			nodeManager->AddNode(value, 100);
-			
-			//Entity* e = Recycler::GetInstance().Reactivate();
-			//noteMarkers.insert(noteMarkers.begin(), e);
-			//e->SetPosition(XMFLOAT3(value - 1, -1, 100));
+			/*
+			Entity* e = Recycler::GetInstance().Reactivate();
+			noteMarkers.insert(noteMarkers.begin(), e);
+			e->SetPosition(XMFLOAT3(value - 1, -1, 100));
 		}
 	}*/
 }
@@ -409,6 +440,20 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
+	float freqs[32];
+	memset(freqs, 0, sizeof(float) * 32);
+
+	bool songNotStarted;
+	songChannel->getPaused(&songNotStarted);
+	//get some song data
+	if (!songNotStarted && totalTime >= 6.0f) {
+		dsp->getParameterData(FMOD_DSP_FFT_SPECTRUMDATA, (void**)&fft, 0, 0, 0);
+		for (int i = 0; i < 32; i++) {
+			if (fft->spectrum[0] == nullptr) break;
+			freqs[i] = fft->spectrum[0][i];
+		}
+	}
+
 	// Background color (Cornflower Blue in this case) for clearing
 	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 
@@ -421,6 +466,75 @@ void Game::Draw(float deltaTime, float totalTime)
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f,
 		0);
+
+	//// Send data to shader variables
+	////  - Do this ONCE PER OBJECT you're drawing
+	////  - This is actually a complex process of copying data to a local buffer
+	////    and then copying that entire buffer to the GPU.  
+	////  - The "SimpleShader" class handles all of that for you.
+	//vertexShader->SetMatrix4x4("view", camera->GetViewMatrix());
+	//vertexShader->SetMatrix4x4("projection", camera->GetProjectionMatrix());
+
+	// Once you've set all of the data you care to change for
+	// the next draw call, you need to actually send it to the GPU
+	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
+	//vertexShader->CopyAllBufferData();
+
+	// Set the vertex and pixel shaders to use for the next Draw() command
+	//  - These don't technically need to be set every frame...YET
+	//  - Once you start applying different shaders to different objects,
+	//    you'll need to swap the current shaders before each draw
+	//vertexShader->SetShader();
+	//pixelShader->SetShader();
+
+	// Set buffers in the input assembler
+	//  - Do this ONCE PER OBJECT you're drawing, since each object might
+	//    have different geometry.
+	//UINT stride = sizeof(Vertex);
+	//UINT offset = 0;
+	//context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+	//context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+	// Finally do the actual drawing
+	//  - Do this ONCE PER OBJECT you intend to draw
+	//  - This will use all of the currently set DirectX "stuff" (shaders, buffers, etc)
+	//  - DrawIndexed() uses the currently set INDEX BUFFER to look up corresponding
+	//     vertices in the currently set VERTEX BUFFER
+	//context->DrawIndexed(
+	//	3,     // The number of indices to use (we could draw a subset if we wanted)
+	//	0,     // Offset to the first index we want to use
+	//	0);    // Offset to add to each index when looking up vertices
+
+	/*
+	//for (auto mesh : meshes) {
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+		ID3D11Buffer* vb = mesh->GetVertexBuffer();
+		context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+		context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+		context->DrawIndexed(
+			mesh->GetIndexCount(),
+			0,
+			0);
+	}*/
+
+	Mesh* cubeMesh1 = testCube1->GetMesh();
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	ID3D11Buffer* vba = cubeMesh1->GetVertexBuffer();
+	context->IAGetVertexBuffers(0, 1, &vba, &stride, &offset);
+	context->IASetIndexBuffer(cubeMesh1->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	testCube1->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 32, dirLight, dirLight2);
+	context->DrawIndexed(cubeMesh1->GetIndexCount(), 0, 0);
+
+	Mesh* sphereMesh2 = testCube2->GetMesh();
+	vba = sphereMesh2->GetVertexBuffer();
+	context->IAGetVertexBuffers(0, 1, &vba, &stride, &offset);
+	context->IASetIndexBuffer(sphereMesh2->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	testCube2->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 32, dirLight, dirLight2);
+	context->DrawIndexed(sphereMesh2->GetIndexCount(), 0, 0);
+
 
 	for (auto entity : entities) {
 		if (!entity->IsActive()) continue;

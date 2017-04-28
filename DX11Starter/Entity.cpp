@@ -110,6 +110,23 @@ void Entity::PrepareMaterial(XMFLOAT4X4 view, XMFLOAT4X4 projection, Directional
 	ps->SetShader();
 }
 
+void Entity::PrepareTerrainMaterial(XMFLOAT4X4 view, XMFLOAT4X4 projection, float* frequencies, unsigned int length, DirectionalLight light, DirectionalLight light2) {
+	SimpleVertexShader* vs = _material->GetVertexShader();
+	vs->SetMatrix4x4("view", view);
+	vs->SetMatrix4x4("projection", projection);
+	vs->SetMatrix4x4("world", _worldMatrix);
+	bool result = vs->SetData("amplitudes", frequencies, sizeof(float) * length);
+	vs->CopyAllBufferData();
+	SimplePixelShader* ps = _material->GetPixelShader();
+	ps->SetData("light", &light, sizeof(DirectionalLight));
+	ps->SetData("light2", &light2, sizeof(DirectionalLight));
+	ps->SetShaderResourceView("diffuseTexture", _material->GetTexture());
+	ps->SetSamplerState("basicSampler", _material->GetSamplerState());
+	ps->CopyAllBufferData();
+	vs->SetShader();
+	ps->SetShader();
+}
+
 void Entity::Activate() {
 	active = true;
 }
