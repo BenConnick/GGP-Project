@@ -20,8 +20,9 @@ public:
 	);
 	~Emitter();
 	void SpawnNewParticle();
+	void SpawnNewParticle(XMFLOAT3 pos, XMFLOAT3 vel);
 	DirectX::XMFLOAT3* GetSpawnPos();
-	void InitializeParticle(int index);
+	void InitializeParticle(int index, XMFLOAT3 pos, XMFLOAT3 vel);
 	void Update(float dt);
 
 	void Draw(ID3D11DeviceContext* context, Camera* camera, float deltaTime, float totalTime);
@@ -41,6 +42,7 @@ private:
 	// buffer matrix for ParticleGS cbuffer
 	ID3D11Buffer* stuff;
 
+	int numLiving = 0;
 	int nextParticle = 0;
 	DirectX::XMFLOAT3 spawnPos;
 	DirectX::XMFLOAT3 velocity;

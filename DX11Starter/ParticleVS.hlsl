@@ -63,6 +63,8 @@ VStoGS main(VSInput input)
 	// Set up output
 	VStoGS output;
 	output.type = input.type;
+	if (input.age > maxLifetime) output.type = 0;
+	
 	
 	// Handle the position
 	float t = input.age;

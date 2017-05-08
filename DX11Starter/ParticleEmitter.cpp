@@ -35,9 +35,9 @@ Emitter::Emitter(
 	for (int i = 0; i < maxParticles; i++) {
 		particles[i] = Particle();
 		// set default properties
-		InitializeParticle(i);
+		InitializeParticle(i, spawnPos, velocity);
 		// start with no particles alive
-		//particles[i].Age = lifetime;
+		particles[i].Age = lifetime;
 	}
 	// initialize DYNAMIC buffer for particles
 	vbd.Usage = D3D11_USAGE_DYNAMIC;
@@ -58,10 +58,14 @@ Emitter::~Emitter() {
 }
 
 void Emitter::SpawnNewParticle() {
+	SpawnNewParticle(spawnPos, velocity);
+}
+
+void Emitter::SpawnNewParticle(DirectX::XMFLOAT3 _position, DirectX::XMFLOAT3 _velocity) {
 	// check if there are any available particles
 	if (particles[nextParticle].Age < lifetime) return;
 	// particle available, initialize it
-	InitializeParticle(nextParticle);
+	InitializeParticle(nextParticle, _position, _velocity);
 	// this particle is at the back of the queue now, go to the next one
 	nextParticle++;
 }
@@ -70,13 +74,14 @@ DirectX::XMFLOAT3* Emitter::GetSpawnPos() {
 	return &spawnPos;
 }
 
-void Emitter::InitializeParticle(int index) {
+void Emitter::InitializeParticle(int index, DirectX::XMFLOAT3 position, DirectX::XMFLOAT3 velocity) {
 	particles[index].Age = 0;
 	particles[index].StartPosition = spawnPos;
-	particles[index].StartColor = particles[index].MidColor = particles[index].EndColor = colorTint;
+	particles[index].StartColor = particles[index].MidColor= colorTint;
+	particles[index].EndColor = DirectX::XMFLOAT4(1,1,1,0);
 	velocity = DirectX::XMFLOAT3((rand() % 100)*0.01, (rand() % 100)*0.01, (rand() % 100)*0.01);
 	particles[index].StartVelocity = velocity;
-	particles[index].StartMidEndSizes = XMFLOAT3(1,1,1);
+	particles[index].StartMidEndSizes = XMFLOAT3(1, 1, 1);
 }
 
 void Emitter::Update(float dt) {
