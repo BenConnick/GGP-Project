@@ -517,7 +517,7 @@ void Game::Draw(float deltaTime, float totalTime)
 			0,
 			0);
 	}*/
-
+	///*
 	Mesh* cubeMesh1 = testCube1->GetMesh();
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
@@ -546,8 +546,11 @@ void Game::Draw(float deltaTime, float totalTime)
 		entity->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), dirLight, dirLight2);
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
-
-
+	//*/
+	///*
+	stride = sizeof(Vertex);
+	offset = 0;
+	//*/
 	//render sky, must occur after all solid objects
 	ID3D11Buffer* skyboxVB = skybox->GetVertexBuffer();
 	ID3D11Buffer* skyboxIB = skybox->GetIndexBuffer();
