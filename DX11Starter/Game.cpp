@@ -3,6 +3,7 @@
 #include "WICTextureLoader.h"
 #include "Recycler.h"
 #include <fmod_errors.h>
+#include "ParticleManager.h"
 
 // For the DirectX Math library
 using namespace DirectX;
@@ -152,6 +153,7 @@ void Game::Init()
 
 	// create the particle emitters
 	simpleEmitter = new Emitter(device, particleVS, particlePS, particleGS, particleTexture, sampler, particleBlendState, particleDepthState);
+	ParticleManager::GetInstance().AttachEmitter(simpleEmitter);
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -361,6 +363,7 @@ void Game::Update(float deltaTime, float totalTime)
 	system->update();
 	camera->Update(deltaTime);
 	simpleEmitter->Update(deltaTime);
+	ParticleManager::GetInstance().Update(deltaTime);
 	// Quit if the escape key is pressed
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
@@ -455,7 +458,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 
 	// Background color (Cornflower Blue in this case) for clearing
-	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+	//const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+	const float color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	// Clear the render target and depth buffer (erases what's on the screen)
 	//  - Do this ONCE PER FRAME
@@ -519,7 +523,7 @@ void Game::Draw(float deltaTime, float totalTime)
 			0);
 	}*/
 
-	Mesh* cubeMesh1 = testCube1->GetMesh();
+	/*Mesh* cubeMesh1 = testCube1->GetMesh();
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	ID3D11Buffer* vba = cubeMesh1->GetVertexBuffer();
@@ -534,7 +538,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	context->IASetIndexBuffer(sphereMesh2->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 	testCube2->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 32, dirLight, dirLight2);
 	context->DrawIndexed(sphereMesh2->GetIndexCount(), 0, 0);
-
+	*/
 
 	for (auto entity : entities) {
 		if (!entity->IsActive()) continue;

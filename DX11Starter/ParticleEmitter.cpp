@@ -11,7 +11,7 @@ Emitter::Emitter(
 	ID3D11BlendState* particleBlendState,
 	ID3D11DepthStencilState* particleDepthState
 ) {
-	maxParticles = 100;
+	maxParticles = 10000;
 
 	// emitter properties
 	spawnPos = XMFLOAT3(0, 1, 0);
@@ -35,9 +35,13 @@ Emitter::Emitter(
 	for (int i = 0; i < maxParticles; i++) {
 		particles[i] = Particle();
 		// set default properties
-		InitializeParticle(i, spawnPos, velocity);
+		InitializeParticle(i, spawnPos, velocity, colorTint, colorTint, colorTint, XMFLOAT3(1,1,1));
+		//InitializeParticle(i, spawnPos, DirectX::XMFLOAT3((rand() % 10000)*0.0001, i/100.0, (rand()%10000)*0.0001));
 		// start with no particles alive
-		particles[i].Age = lifetime;
+		particles[i].Age = lifetime + 1;
+	}
+	for (int i = 0; i < maxParticles; i++) {
+		particles[i].Age = lifetime + 1;
 	}
 	// initialize DYNAMIC buffer for particles
 	vbd.Usage = D3D11_USAGE_DYNAMIC;
@@ -62,26 +66,49 @@ void Emitter::SpawnNewParticle() {
 }
 
 void Emitter::SpawnNewParticle(DirectX::XMFLOAT3 _position, DirectX::XMFLOAT3 _velocity) {
+	SpawnNewParticle(_position, _velocity, colorTint, colorTint, XMFLOAT4(1, 1, 1, 0), XMFLOAT3(1, 1, 1));
+}
+
+void Emitter::SpawnNewParticle(
+	DirectX::XMFLOAT3 _position, 
+	DirectX::XMFLOAT3 _velocity,
+	DirectX::XMFLOAT4 startColor,
+	DirectX::XMFLOAT4 midColor,
+	DirectX::XMFLOAT4 endColor,
+	DirectX::XMFLOAT3 scale) 
+{
 	// check if there are any available particles
-	if (particles[nextParticle].Age < lifetime) return;
+	if (particles[nextParticle].Age < lifetime) {
+		std::cout << "max particles exceeded";
+		return;
+	}
 	// particle available, initialize it
-	InitializeParticle(nextParticle, _position, _velocity);
+	InitializeParticle(nextParticle, _position, _velocity, startColor, midColor, endColor, scale);
 	// this particle is at the back of the queue now, go to the next one
-	nextParticle++;
+	nextParticle = (nextParticle + 1) % maxParticles;
 }
 
 DirectX::XMFLOAT3* Emitter::GetSpawnPos() {
 	return &spawnPos;
 }
 
-void Emitter::InitializeParticle(int index, DirectX::XMFLOAT3 position, DirectX::XMFLOAT3 velocity) {
+void Emitter::InitializeParticle(
+	int index, 
+	DirectX::XMFLOAT3 _position, 
+	DirectX::XMFLOAT3 _velocity, 
+	DirectX::XMFLOAT4 startColor, 
+	DirectX::XMFLOAT4 midColor, 
+	DirectX::XMFLOAT4 endColor, 
+	DirectX::XMFLOAT3 scale) 
+{
 	particles[index].Age = 0;
-	particles[index].StartPosition = spawnPos;
-	particles[index].StartColor = particles[index].MidColor= colorTint;
-	particles[index].EndColor = DirectX::XMFLOAT4(1,1,1,0);
-	velocity = DirectX::XMFLOAT3((rand() % 100)*0.01, (rand() % 100)*0.01, (rand() % 100)*0.01);
-	particles[index].StartVelocity = velocity;
-	particles[index].StartMidEndSizes = XMFLOAT3(1, 1, 1);
+	particles[index].StartPosition = _position;
+	//particles[index].StartColor = particles[index].MidColor= colorTint;
+	particles[index].StartColor = startColor;
+	particles[index].MidColor = midColor;
+	particles[index].EndColor = endColor;
+	particles[index].StartVelocity = _velocity;
+	particles[index].StartMidEndSizes = scale;
 }
 
 void Emitter::Update(float dt) {
@@ -133,7 +160,7 @@ void Emitter::Draw(ID3D11DeviceContext* context, Camera* camera, float deltaTime
 
 	// Draw auto - draws based on current stream out buffer
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-	context->Draw(100,0);
+	context->Draw(maxParticles,0);
 
 	// Unset Geometry Shader for next frame and reset states
 	context->GSSetShader(0, 0, 0);

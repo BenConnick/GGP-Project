@@ -101,6 +101,6 @@ void Camera::OnResize(unsigned int width, unsigned int height) {
 		0.25f * 3.1415926535f,		// Field of View Angle
 		(float)width / height,		// Aspect ratio
 		0.1f,						// Near clip plane distance
-		100.0f);					// Far clip plane distance
+		500.0f);					// Far clip plane distance
 	XMStoreFloat4x4(&_projectionMatrix, XMMatrixTranspose(P));
 }
