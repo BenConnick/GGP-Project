@@ -4,6 +4,7 @@
 #include "DDSTextureLoader.h"
 #include "Recycler.h"
 #include <fmod_errors.h>
+#include "ParticleManager.h"
 
 // For the DirectX Math library
 using namespace DirectX;
@@ -96,12 +97,12 @@ Game::~Game()
 
 	delete vertexShader;
 	delete pixelShader;
-
 	delete simpleEmitter;
 
 	skyboxSRV->Release();
 	delete skyboxVS;
 	delete skyboxPS;
+
 
 	//delete fft;
 
@@ -158,6 +159,7 @@ void Game::Init()
 
 	// create the particle emitters
 	simpleEmitter = new Emitter(device, particleVS, particlePS, particleGS, particleTexture, sampler, particleBlendState, particleDepthState);
+	ParticleManager::GetInstance().AttachEmitter(simpleEmitter);
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -230,7 +232,6 @@ void Game::LoadShaders()
 	terrainVS = new SimpleVertexShader(device, context);
 	if (!terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso"))
 		terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso");
-
 	skyboxVS = new SimpleVertexShader(device, context);
 	if (!skyboxVS->LoadShaderFile(L"x64/Debug/SkyboxVS.cso"))
 		skyboxVS->LoadShaderFile(L"SkyboxVS.cso");
@@ -403,6 +404,7 @@ void Game::Update(float deltaTime, float totalTime)
 	system->update();
 	camera->Update(deltaTime);
 	simpleEmitter->Update(deltaTime);
+	ParticleManager::GetInstance().Update(deltaTime);
 	// Quit if the escape key is pressed
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
@@ -427,61 +429,10 @@ void Game::Update(float deltaTime, float totalTime)
 	float sinTime = abs(sinf(totalTime));
 	float cosTime = abs(cosf(totalTime));
 
-	// timer
-	//myTimer += deltaTime;
-
-	// move notes
-	/*
-	for (int i = 0; i < noteMarkers.size(); i++) {
-		if (noteMarkers[i]->IsActive()) {
-			XMFLOAT3 p = noteMarkers[i]->GetPosition();
-			noteMarkers[i]->SetPosition(XMFLOAT3(p.x,p.y,p.z - deltaTime * 100));
-			// remove old
-			if (noteMarkers[i]->GetPosition().z < 0) {
-				if (player->GetRail() == noteMarkers[i]->GetPosition().x+1) {
-					cout << "note hit on rail " << player->GetRail() << "! ";
-				}
-				Recycler::GetInstance().Deactivate(noteMarkers.back());
-				noteMarkers.pop_back();
-			}
-		}
-	}*/
 
 	player->Update(deltaTime);
 	nodeManager->Update(deltaTime);
-	/*
-	int numNotes = parser.GetMeasure(parser.measureNum)->size();
-	float secPerBeat = 4*60.0 / parser.BPMS;
-	
-	// create entities dynamically
-	float max = secPerBeat / numNotes;
-	if (myTimer > max) {
-		counter++;
-		if (counter >= numNotes) {
-			counter = 0;
-			parser.measureNum++;
-		}
-		myTimer -= max;
-		
-		// FOR DEMONSTRATION ONLY
-		int value = parser.GetNote(parser.measureNum, counter);
-		printf("%d\n",value);
-		if (value > -1) {
-			// new at front
-			nodeManager->AddNode(value, 100);
-<<<<<<< HEAD
-			
-			//Entity* e = Recycler::GetInstance().Reactivate();
-			//noteMarkers.insert(noteMarkers.begin(), e);
-			//e->SetPosition(XMFLOAT3(value - 1, -1, 100));
-=======
-			/*
-			Entity* e = Recycler::GetInstance().Reactivate();
-			noteMarkers.insert(noteMarkers.begin(), e);
-			e->SetPosition(XMFLOAT3(value - 1, -1, 100));
->>>>>>> CubeMap
-		}
-	}*/
+
 }
 
 // --------------------------------------------------------
@@ -504,7 +455,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 
 	// Background color (Cornflower Blue in this case) for clearing
-	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+	//const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+	const float color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	// Clear the render target and depth buffer (erases what's on the screen)
 	//  - Do this ONCE PER FRAME
@@ -539,8 +491,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	// Set buffers in the input assembler
 	//  - Do this ONCE PER OBJECT you're drawing, since each object might
 	//    have different geometry.
-	//UINT stride = sizeof(Vertex);
-	//UINT offset = 0;
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
 	//context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
 	//context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
@@ -567,8 +519,12 @@ void Game::Draw(float deltaTime, float totalTime)
 			0,
 			0);
 	}*/
-	///*
+
 	Mesh* cubeMesh1 = testCube1->GetMesh();
+
+
+	/*Mesh* cubeMesh1 = testCube1->GetMesh();
+>>>>>>> master
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	ID3D11Buffer* vba = cubeMesh1->GetVertexBuffer();
@@ -583,7 +539,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	context->IASetIndexBuffer(sphereMesh2->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 	testCube2->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 32, dirLight, dirLight2);
 	context->DrawIndexed(sphereMesh2->GetIndexCount(), 0, 0);
-
+	*/
 
 	for (auto entity : entities) {
 		if (!entity->IsActive()) continue;

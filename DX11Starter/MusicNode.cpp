@@ -1,7 +1,6 @@
 #include "MusicNode.h"
 
 
-
 MusicNode::MusicNode(Entity* e, RailSet* r, float t, int currentR)
 {
 	rails = r;

@@ -20,8 +20,23 @@ public:
 	);
 	~Emitter();
 	void SpawnNewParticle();
+	void SpawnNewParticle(XMFLOAT3 pos, XMFLOAT3 vel);
+	void SpawnNewParticle(
+		DirectX::XMFLOAT3 _position,
+		DirectX::XMFLOAT3 _velocity,
+		DirectX::XMFLOAT4 startColor,
+		DirectX::XMFLOAT4 midColor,
+		DirectX::XMFLOAT4 endColor,
+		DirectX::XMFLOAT3 scale);
 	DirectX::XMFLOAT3* GetSpawnPos();
-	void InitializeParticle(int index);
+	void InitializeParticle(
+		int index,
+		DirectX::XMFLOAT3 _position,
+		DirectX::XMFLOAT3 _velocity,
+		DirectX::XMFLOAT4 startColor,
+		DirectX::XMFLOAT4 midColor,
+		DirectX::XMFLOAT4 endColor,
+		DirectX::XMFLOAT3 scale);
 	void Update(float dt);
 
 	void Draw(ID3D11DeviceContext* context, Camera* camera, float deltaTime, float totalTime);
@@ -41,6 +56,7 @@ private:
 	// buffer matrix for ParticleGS cbuffer
 	ID3D11Buffer* stuff;
 
+	int numLiving = 0;
 	int nextParticle = 0;
 	DirectX::XMFLOAT3 spawnPos;
 	DirectX::XMFLOAT3 velocity;
@@ -48,7 +64,7 @@ private:
 	Material* material;
 	// circular buffer of particles
 	Particle* particles;
-	float lifetime = 10;
+	float lifetime = 5;
 	DirectX::XMFLOAT4 colorTint;
 	D3D11_BUFFER_DESC vbd;
 	ID3D11Buffer* particleBuffer;

@@ -162,7 +162,6 @@
     <ClInclude Include="Rail.h" />
     <ClInclude Include="RailSet.h" />
     <ClInclude Include="Recycler.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="SMParser.h" />
     <ClInclude Include="Vertex.h" />

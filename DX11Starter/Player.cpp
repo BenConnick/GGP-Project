@@ -1,5 +1,5 @@
 #include "Player.h"
-
+#include "ParticleManager.h"
 
 #pragma once
 
@@ -48,6 +48,7 @@ void Player::Update(float deltaTime) {
 
 void Player::Hit() {
 	currentScale += 0.5f;
+	ParticleManager::GetInstance().NoteHitBurst(entity->GetPosition());
 }
 
 int Player::GetRail() {
