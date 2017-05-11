@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Vertex.h"
 #include "WICTextureLoader.h"
+#include "DDSTextureLoader.h"
 #include "Recycler.h"
 #include <fmod_errors.h>
 
@@ -53,6 +54,7 @@ Game::Game(HINSTANCE hInstance)
 		printf("FMOD error! (%d) %s\n", res, FMOD_ErrorString(res));
 		exit(-1);
 	}
+	system->getMasterChannelGroup(&mastergroup);
 
 	res = system->playSound(song, nullptr, true, &songChannel);
 	songChannel->setVolume(0.5f);
@@ -79,6 +81,9 @@ Game::~Game()
 		delete entity;
 	}
 
+	delete testCube1;
+	delete testCube2;
+
 	for (auto material : materials) {
 		delete material;
 	}
@@ -94,7 +99,15 @@ Game::~Game()
 
 	delete simpleEmitter;
 
+	skyboxSRV->Release();
+	delete skyboxVS;
+	delete skyboxPS;
+
+	//delete fft;
+
+	dsp->release();
 	song->release();
+	mastergroup->release();
 	system->release();
 
 	entities.~vector();
@@ -151,6 +164,36 @@ void Game::Init()
 	// Essentially: "What kind of shape should the GPU draw with our data?"
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	HRESULT hr = CreateDDSTextureFromFile(device, L"Assets/Textures/skybox3.dds", 0, &skyboxSRV);
+	//printf(hr);
+	//CreateWICTextureFromFile(device, L"Assets/Textures/skybox.dds", 0, &skyboxSRV);
+	
+	// Create a sampler state for texture sampling
+	D3D11_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// Ask the device to create a state
+	device->CreateSamplerState(&samplerDesc, &sampler);
+
+	D3D11_RASTERIZER_DESC rsDesc = {};
+	rsDesc.FillMode = D3D11_FILL_SOLID;
+	rsDesc.CullMode = D3D11_CULL_FRONT;
+	rsDesc.DepthClipEnable = true;
+	device->CreateRasterizerState(&rsDesc, &rsSkybox);
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	device->CreateDepthStencilState(&dsDesc, &dsSkybox);
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	// load song beatmap, print success
 	cout << "songs loaded: " << parser.OpenFile("Assets/Beatmaps/song.sm");
 }
@@ -184,7 +227,16 @@ void Game::LoadShaders()
 	if (!particleGS->LoadShaderFile(L"x64/Debug/ParticleGS.cso"))
 		particleGS->LoadShaderFile(L"ParticleGS.cso");
 
-	cout << particleGS;
+	terrainVS = new SimpleVertexShader(device, context);
+	if (!terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso"))
+		terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso");
+
+	skyboxVS = new SimpleVertexShader(device, context);
+	if (!skyboxVS->LoadShaderFile(L"x64/Debug/SkyboxVS.cso"))
+		skyboxVS->LoadShaderFile(L"SkyboxVS.cso");
+	skyboxPS = new SimplePixelShader(device, context);
+	if (!skyboxPS->LoadShaderFile(L"x64/Debug/SkyboxPS.cso")) 
+		skyboxPS->LoadShaderFile(L"SkyboxPS.cso");
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
 
@@ -262,10 +314,12 @@ void Game::CreateBasicGeometry()
 
 	ID3D11ShaderResourceView* metalTex;
 	ID3D11ShaderResourceView* woodTex;
+	ID3D11ShaderResourceView* terrainTex;
 
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/metal.jpg", 0, &metalTex);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &woodTex);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/SimpleParticle.jpg", 0, &particleTexture);
+	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &terrainTex);
 
 	Mesh* cone = new Mesh("Assets/Models/cone.obj", device);
 	meshes.push_back(cone);
@@ -282,11 +336,20 @@ void Game::CreateBasicGeometry()
 	Mesh* car = new Mesh("Assets/Models/Porsche_911_GT2.obj", device);
 	meshes.push_back(car);
 
+	skybox = cube;
+
 	Material* defMaterial = new Material(vertexShader, pixelShader, metalTex, sampler);
 	materials.push_back(defMaterial);
 	Material* woodMaterial = new Material(vertexShader, pixelShader, woodTex, sampler);
 	materials.push_back(woodMaterial);
-  
+	Material* dynMaterial = new Material(terrainVS, pixelShader, terrainTex, sampler);
+	materials.push_back(dynMaterial);
+
+	testCube1 = new Entity(sphere, dynMaterial);
+	testCube2 = new Entity(sphere, dynMaterial);
+	testCube1->SetPosition({ -1.0f, 1.0f, 1.0f });
+	testCube2->SetPosition({ 1.0f,1.0f,1.0f });
+
 	Entity* playerEnt = new Entity(car, defMaterial);
   
 	playerEnt->Activate();
@@ -346,9 +409,19 @@ void Game::Update(float deltaTime, float totalTime)
 
 	bool songNotStarted;
 	songChannel->getPaused(&songNotStarted);
+	FMOD_RESULT res;
+	float dfft;
 
 	if (totalTime >= 5.0f && songNotStarted) {
 		songChannel->setPaused(false);
+		system->createDSPByType(FMOD_DSP_TYPE_FFT, &dsp);
+		mastergroup->addDSP(0, dsp);
+		dsp->setActive(true);
+		dsp->setParameterInt(FMOD_DSP_FFT_WINDOWTYPE, FMOD_DSP_FFT_WINDOW_TRIANGLE);
+		dsp->setParameterInt(FMOD_DSP_FFT_WINDOWSIZE, 128);
+	}
+	if (totalTime >= 15.0f) {
+		//DebugBreak();
 	}
 
 	float sinTime = abs(sinf(totalTime));
@@ -396,10 +469,17 @@ void Game::Update(float deltaTime, float totalTime)
 		if (value > -1) {
 			// new at front
 			nodeManager->AddNode(value, 100);
+<<<<<<< HEAD
 			
 			//Entity* e = Recycler::GetInstance().Reactivate();
 			//noteMarkers.insert(noteMarkers.begin(), e);
 			//e->SetPosition(XMFLOAT3(value - 1, -1, 100));
+=======
+			/*
+			Entity* e = Recycler::GetInstance().Reactivate();
+			noteMarkers.insert(noteMarkers.begin(), e);
+			e->SetPosition(XMFLOAT3(value - 1, -1, 100));
+>>>>>>> CubeMap
 		}
 	}*/
 }
@@ -409,6 +489,20 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
+	float freqs[32];
+	memset(freqs, 0, sizeof(float) * 32);
+
+	bool songNotStarted;
+	songChannel->getPaused(&songNotStarted);
+	//get some song data
+	if (!songNotStarted && totalTime >= 6.0f) {
+		dsp->getParameterData(FMOD_DSP_FFT_SPECTRUMDATA, (void**)&fft, 0, 0, 0);
+		for (int i = 0; i < 32; i++) {
+			if (fft->spectrum[0] == nullptr) break;
+			freqs[i] = fft->spectrum[0][i];
+		}
+	}
+
 	// Background color (Cornflower Blue in this case) for clearing
 	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 
@@ -421,6 +515,75 @@ void Game::Draw(float deltaTime, float totalTime)
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f,
 		0);
+
+	//// Send data to shader variables
+	////  - Do this ONCE PER OBJECT you're drawing
+	////  - This is actually a complex process of copying data to a local buffer
+	////    and then copying that entire buffer to the GPU.  
+	////  - The "SimpleShader" class handles all of that for you.
+	//vertexShader->SetMatrix4x4("view", camera->GetViewMatrix());
+	//vertexShader->SetMatrix4x4("projection", camera->GetProjectionMatrix());
+
+	// Once you've set all of the data you care to change for
+	// the next draw call, you need to actually send it to the GPU
+	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
+	//vertexShader->CopyAllBufferData();
+
+	// Set the vertex and pixel shaders to use for the next Draw() command
+	//  - These don't technically need to be set every frame...YET
+	//  - Once you start applying different shaders to different objects,
+	//    you'll need to swap the current shaders before each draw
+	//vertexShader->SetShader();
+	//pixelShader->SetShader();
+
+	// Set buffers in the input assembler
+	//  - Do this ONCE PER OBJECT you're drawing, since each object might
+	//    have different geometry.
+	//UINT stride = sizeof(Vertex);
+	//UINT offset = 0;
+	//context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+	//context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+	// Finally do the actual drawing
+	//  - Do this ONCE PER OBJECT you intend to draw
+	//  - This will use all of the currently set DirectX "stuff" (shaders, buffers, etc)
+	//  - DrawIndexed() uses the currently set INDEX BUFFER to look up corresponding
+	//     vertices in the currently set VERTEX BUFFER
+	//context->DrawIndexed(
+	//	3,     // The number of indices to use (we could draw a subset if we wanted)
+	//	0,     // Offset to the first index we want to use
+	//	0);    // Offset to add to each index when looking up vertices
+
+	/*
+	//for (auto mesh : meshes) {
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+		ID3D11Buffer* vb = mesh->GetVertexBuffer();
+		context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+		context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+		context->DrawIndexed(
+			mesh->GetIndexCount(),
+			0,
+			0);
+	}*/
+	///*
+	Mesh* cubeMesh1 = testCube1->GetMesh();
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	ID3D11Buffer* vba = cubeMesh1->GetVertexBuffer();
+	context->IAGetVertexBuffers(0, 1, &vba, &stride, &offset);
+	context->IASetIndexBuffer(cubeMesh1->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	testCube1->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 32, dirLight, dirLight2);
+	context->DrawIndexed(cubeMesh1->GetIndexCount(), 0, 0);
+
+	Mesh* sphereMesh2 = testCube2->GetMesh();
+	vba = sphereMesh2->GetVertexBuffer();
+	context->IAGetVertexBuffers(0, 1, &vba, &stride, &offset);
+	context->IASetIndexBuffer(sphereMesh2->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	testCube2->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 32, dirLight, dirLight2);
+	context->DrawIndexed(sphereMesh2->GetIndexCount(), 0, 0);
+
 
 	for (auto entity : entities) {
 		if (!entity->IsActive()) continue;
@@ -436,6 +599,34 @@ void Game::Draw(float deltaTime, float totalTime)
 	
 	// Draw particles
 	simpleEmitter->Draw(context,camera,deltaTime,totalTime);
+	//*/
+	///*
+	stride = sizeof(Vertex);
+	offset = 0;
+	//*/
+	//render sky, must occur after all solid objects
+	ID3D11Buffer* skyboxVB = skybox->GetVertexBuffer();
+	ID3D11Buffer* skyboxIB = skybox->GetIndexBuffer();
+
+	context->IASetVertexBuffers(0, 1, &skyboxVB, &stride, &offset);
+	context->IASetIndexBuffer(skyboxIB, DXGI_FORMAT_R32_UINT, 0);
+
+	skyboxVS->SetMatrix4x4("view", camera->GetViewMatrix());
+	skyboxVS->SetMatrix4x4("projection", camera->GetProjectionMatrix());
+	skyboxVS->CopyAllBufferData();
+	skyboxVS->SetShader();
+
+	skyboxPS->SetShaderResourceView("Skybox", skyboxSRV);
+	skyboxPS->SetSamplerState("Sampler", sampler);
+	skyboxPS->CopyAllBufferData();
+	skyboxPS->SetShader();
+
+	context->RSSetState(rsSkybox);
+	context->OMSetDepthStencilState(dsSkybox, 0);
+	context->DrawIndexed(skybox->GetIndexCount(),0,0);
+
+	context->RSSetState(0);
+	context->OMSetDepthStencilState(0, 0);
 
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it

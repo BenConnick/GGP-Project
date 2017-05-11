@@ -10,6 +10,7 @@
 #include "SMParser.h"
 #include <DirectXMath.h>
 #include <vector>
+#include <fmod.h>
 #include <fmod_common.h>
 #include <fmod.hpp>
 #include "Player.h"
@@ -17,7 +18,7 @@
 #include "MusicNodeManager.h"
 #include "ParticleEmitter.h"
 
-class Game 
+class Game
 	: public DXCore
 {
 
@@ -33,14 +34,14 @@ public:
 	void Draw(float deltaTime, float totalTime);
 
 	// Overridden mouse input helper methods
-	void OnMouseDown (WPARAM buttonState, int x, int y);
-	void OnMouseUp	 (WPARAM buttonState, int x, int y);
-	void OnMouseMove (WPARAM buttonState, int x, int y);
-	void OnMouseWheel(float wheelDelta,   int x, int y);
+	void OnMouseDown(WPARAM buttonState, int x, int y);
+	void OnMouseUp(WPARAM buttonState, int x, int y);
+	void OnMouseMove(WPARAM buttonState, int x, int y);
+	void OnMouseWheel(float wheelDelta, int x, int y);
 private:
 
 	// Initialization helper methods - feel free to customize, combine, etc.
-	void LoadShaders(); 
+	void LoadShaders();
 	void CreateMatrices();
 	void CreateBasicGeometry();
 
@@ -48,11 +49,22 @@ private:
 	std::vector<Mesh*> meshes;
 	std::vector<Entity*> entities;
 	std::vector<Material*> materials;
+	Entity* testCube1;
+	Entity* testCube2;
 
 	// Wrappers for DirectX shaders to provide simplified functionality
 	SimpleVertexShader* vertexShader;
 	SimplePixelShader* pixelShader;
 	ID3D11SamplerState* sampler;
+
+	SimpleVertexShader* terrainVS;
+
+	Mesh* skybox;
+	ID3D11ShaderResourceView* skyboxSRV;
+	ID3D11RasterizerState*  rsSkybox;
+	ID3D11DepthStencilState* dsSkybox;
+	SimpleVertexShader* skyboxVS;
+	SimplePixelShader* skyboxPS;
 
 	// The matrices to go from model space to screen space
 	DirectX::XMFLOAT4X4 worldMatrix;
@@ -70,8 +82,11 @@ private:
 
 	// FMOD handles
 	FMOD::System* system;
+	FMOD::ChannelGroup* mastergroup;
 	FMOD::Sound* song;
 	FMOD::Channel* songChannel;
+	FMOD::DSP* dsp;
+	FMOD_DSP_PARAMETER_FFT* fft;
 
 	DirectionalLight dirLight;
 	DirectionalLight dirLight2;

@@ -32,9 +32,14 @@ void MusicNodeManager::AddNode(int rail, float time)
 		Entity* e = new Entity(nodeMesh, nodeMat);
 		node = new MusicNode(e, rails, time, rail);
 		entities->push_back(e);
+		nodes.push_back(node);
+	}
+	else {
+		node->SetTime(time);
+		node->SetRail(rail);
 	}
 	node->GetEntity()->Activate();
-	nodes.push_back(node);
+	
 }
 
 void MusicNodeManager::AddNode(Entity * e, int rail, float time)
@@ -62,10 +67,11 @@ void MusicNodeManager::Update(float deltaTime)
 
 		// FOR DEMONSTRATION ONLY
 		int value = parser->GetNote(parser->measureNum, counter);
-		printf("%d\n", value);
+
 		if (value > -1) {
 			// new at front
-			AddNode(value, 100);
+			printf("%d\n", value);
+			AddNode(value, 1);
 		}
 	}
 
@@ -97,10 +103,16 @@ void MusicNodeManager::Update(float deltaTime)
 		}
 		if (node->GetState() == NodeState::DEAD) {
 			recycler->Deactivate(node);
-			for (int j = 0; j < nodes.size()-1; j++) {
-				nodes[i+j] = nodes[i+j+1];
+			/*
+			printf("%d\n", i);
+			if (nodes.size() > 1) {
+				for (int j = i; j < nodes.size() - 2; j++) {
+					//printf("%d\n", nodes.size());
+					nodes[j] = nodes[j + 1];
+				}
 			}
 			nodes.pop_back();
+			*/
 		}
 		//later we will remove nodes instead
 	}

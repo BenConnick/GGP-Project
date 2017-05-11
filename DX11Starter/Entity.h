@@ -26,6 +26,7 @@ public:
 	void Deactivate();
 	bool IsActive();
 	void PrepareMaterial(XMFLOAT4X4, XMFLOAT4X4, DirectionalLight, DirectionalLight);
+	void PrepareTerrainMaterial(XMFLOAT4X4 view, XMFLOAT4X4 projection, float * frequencies, unsigned int length, DirectionalLight light, DirectionalLight light2);
 private:
 	bool active;
 	Mesh* _mesh;

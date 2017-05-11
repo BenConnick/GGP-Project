@@ -36,7 +36,7 @@ public:
 			while (getline(myfile, line))
 			{
 				// debug - print out every line in the file
-				cout << line << '\n';
+	//			cout << line << '\n';
 
 				// look for beats per minute
 				if (!bpmsFound) {
@@ -56,7 +56,7 @@ public:
 				if (!startCodeFound) {
 					// START CODE
 					if (line.find("     Easy:") != string::npos) {
-						cout << "start";
+		//				cout << "start";
 						// start code found, begin collecting notes
 						startCodeFound = true;
 						continue;
@@ -66,7 +66,7 @@ public:
 					// END CODE
 					if (line.find("#NOTES:") != std::string::npos) {
 						// end code found, stop collecting notes
-						cout << "end";
+			//			cout << "end";
 						startCodeFound = false;
 						break;
 					}
@@ -89,7 +89,7 @@ public:
 			}
 
 			// done, print success
-			cout << "\n notes: " << measures.size() << "\n";
+	//		cout << "\n notes: " << measures.size() << "\n";
 
 			// close stream
 			myfile.close();

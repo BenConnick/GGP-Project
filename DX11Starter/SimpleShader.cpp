@@ -228,8 +228,10 @@ SimpleShaderVariable* ISimpleShader::FindVariable(std::string name, int size)
 	// Grab the result from the iterator
 	SimpleShaderVariable* var = &(result->second);
 
+	//if (name == "amplitudes") DebugBreak();
+
 	// Is the data size correct ?
-	if (size > 0 && var->Size != size)
+	if (size > 0 && var->Size < size)
 		return 0;
 
 	// Success
