@@ -1,8 +1,10 @@
 #include "Game.h"
 #include "Vertex.h"
 #include "WICTextureLoader.h"
+#include "DDSTextureLoader.h"
 #include "Recycler.h"
 #include <fmod_errors.h>
+#include "ParticleManager.h"
 
 // For the DirectX Math library
 using namespace DirectX;
@@ -95,6 +97,12 @@ Game::~Game()
 
 	delete vertexShader;
 	delete pixelShader;
+	delete simpleEmitter;
+
+	skyboxSRV->Release();
+	delete skyboxVS;
+	delete skyboxPS;
+
 
 	//delete fft;
 
@@ -126,9 +134,66 @@ void Game::Init()
 
 	dirLight2 = { XMFLOAT4(0.1, 0.1, 0.1, 1), XMFLOAT4(1,0.56,0.85,1), XMFLOAT3(-1, 1, 0) };
 
+	// Particle states ------------------------
+
+	// Blend state
+	D3D11_BLEND_DESC blendDesc = {};
+	blendDesc.AlphaToCoverageEnable = false;
+	blendDesc.IndependentBlendEnable = false;
+	blendDesc.RenderTarget[0].BlendEnable = true;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; // ADDITIVE blending
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	device->CreateBlendState(&blendDesc, &particleBlendState);
+
+	// Depth state
+	D3D11_DEPTH_STENCIL_DESC depthDesc = {};
+	depthDesc.DepthEnable = true;
+	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	device->CreateDepthStencilState(&depthDesc, &particleDepthState);
+
+	// create the particle emitters
+	simpleEmitter = new Emitter(device, particleVS, particlePS, particleGS, particleTexture, sampler, particleBlendState, particleDepthState);
+	ParticleManager::GetInstance().AttachEmitter(simpleEmitter);
+
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
 	// Essentially: "What kind of shape should the GPU draw with our data?"
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	HRESULT hr = CreateDDSTextureFromFile(device, L"Assets/Textures/skybox3.dds", 0, &skyboxSRV);
+	//printf(hr);
+	//CreateWICTextureFromFile(device, L"Assets/Textures/skybox.dds", 0, &skyboxSRV);
+	
+	// Create a sampler state for texture sampling
+	D3D11_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// Ask the device to create a state
+	device->CreateSamplerState(&samplerDesc, &sampler);
+
+	D3D11_RASTERIZER_DESC rsDesc = {};
+	rsDesc.FillMode = D3D11_FILL_SOLID;
+	rsDesc.CullMode = D3D11_CULL_FRONT;
+	rsDesc.DepthClipEnable = true;
+	device->CreateRasterizerState(&rsDesc, &rsSkybox);
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	device->CreateDepthStencilState(&dsDesc, &dsSkybox);
+
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// load song beatmap, print success
@@ -151,10 +216,28 @@ void Game::LoadShaders()
 	if (!pixelShader->LoadShaderFile(L"x64/Debug/PixelShader.cso"))
 		pixelShader->LoadShaderFile(L"PixelShader.cso");
 
+	// Load particle shaders
+	particleVS = new SimpleVertexShader(device, context);
+	if (!particleVS->LoadShaderFile(L"x64/Debug/ParticleVS.cso"))
+		particleVS->LoadShaderFile(L"ParticleVS.cso");
+
+	particlePS = new SimplePixelShader(device, context);
+	if (!particlePS->LoadShaderFile(L"x64/Debug/ParticlePS.cso"))
+		particlePS->LoadShaderFile(L"ParticlePS.cso");
+
+	particleGS = new SimpleGeometryShader(device, context);
+	if (!particleGS->LoadShaderFile(L"x64/Debug/ParticleGS.cso"))
+		particleGS->LoadShaderFile(L"ParticleGS.cso");
+
 	terrainVS = new SimpleVertexShader(device, context);
 	if (!terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso"))
 		terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso");
-
+	skyboxVS = new SimpleVertexShader(device, context);
+	if (!skyboxVS->LoadShaderFile(L"x64/Debug/SkyboxVS.cso"))
+		skyboxVS->LoadShaderFile(L"SkyboxVS.cso");
+	skyboxPS = new SimplePixelShader(device, context);
+	if (!skyboxPS->LoadShaderFile(L"x64/Debug/SkyboxPS.cso")) 
+		skyboxPS->LoadShaderFile(L"SkyboxPS.cso");
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
 
@@ -236,6 +319,7 @@ void Game::CreateBasicGeometry()
 
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/metal.jpg", 0, &metalTex);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &woodTex);
+	CreateWICTextureFromFile(device, context, L"Assets/Textures/SimpleParticle.jpg", 0, &particleTexture);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &terrainTex);
 
 	Mesh* cone = new Mesh("Assets/Models/cone.obj", device);
@@ -252,6 +336,8 @@ void Game::CreateBasicGeometry()
 	meshes.push_back(torus);
 	Mesh* car = new Mesh("Assets/Models/Porsche_911_GT2.obj", device);
 	meshes.push_back(car);
+
+	skybox = cube;
 
 	Material* defMaterial = new Material(vertexShader, pixelShader, metalTex, sampler);
 	materials.push_back(defMaterial);
@@ -317,6 +403,8 @@ void Game::Update(float deltaTime, float totalTime)
 {
 	system->update();
 	camera->Update(deltaTime);
+	simpleEmitter->Update(deltaTime);
+	ParticleManager::GetInstance().Update(deltaTime);
 	// Quit if the escape key is pressed
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
@@ -341,54 +429,10 @@ void Game::Update(float deltaTime, float totalTime)
 	float sinTime = abs(sinf(totalTime));
 	float cosTime = abs(cosf(totalTime));
 
-	// timer
-	//myTimer += deltaTime;
-
-	// move notes
-	/*
-	for (int i = 0; i < noteMarkers.size(); i++) {
-		if (noteMarkers[i]->IsActive()) {
-			XMFLOAT3 p = noteMarkers[i]->GetPosition();
-			noteMarkers[i]->SetPosition(XMFLOAT3(p.x,p.y,p.z - deltaTime * 100));
-			// remove old
-			if (noteMarkers[i]->GetPosition().z < 0) {
-				if (player->GetRail() == noteMarkers[i]->GetPosition().x+1) {
-					cout << "note hit on rail " << player->GetRail() << "! ";
-				}
-				Recycler::GetInstance().Deactivate(noteMarkers.back());
-				noteMarkers.pop_back();
-			}
-		}
-	}*/
 
 	player->Update(deltaTime);
 	nodeManager->Update(deltaTime);
-	/*
-	int numNotes = parser.GetMeasure(parser.measureNum)->size();
-	float secPerBeat = 4*60.0 / parser.BPMS;
-	
-	// create entities dynamically
-	float max = secPerBeat / numNotes;
-	if (myTimer > max) {
-		counter++;
-		if (counter >= numNotes) {
-			counter = 0;
-			parser.measureNum++;
-		}
-		myTimer -= max;
-		
-		// FOR DEMONSTRATION ONLY
-		int value = parser.GetNote(parser.measureNum, counter);
-		printf("%d\n",value);
-		if (value > -1) {
-			// new at front
-			nodeManager->AddNode(value, 100);
-			/*
-			Entity* e = Recycler::GetInstance().Reactivate();
-			noteMarkers.insert(noteMarkers.begin(), e);
-			e->SetPosition(XMFLOAT3(value - 1, -1, 100));
-		}
-	}*/
+
 }
 
 // --------------------------------------------------------
@@ -411,7 +455,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 
 	// Background color (Cornflower Blue in this case) for clearing
-	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+	//const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+	const float color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	// Clear the render target and depth buffer (erases what's on the screen)
 	//  - Do this ONCE PER FRAME
@@ -446,8 +491,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	// Set buffers in the input assembler
 	//  - Do this ONCE PER OBJECT you're drawing, since each object might
 	//    have different geometry.
-	//UINT stride = sizeof(Vertex);
-	//UINT offset = 0;
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
 	//context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
 	//context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
@@ -476,6 +521,10 @@ void Game::Draw(float deltaTime, float totalTime)
 	}*/
 
 	Mesh* cubeMesh1 = testCube1->GetMesh();
+
+
+	/*Mesh* cubeMesh1 = testCube1->GetMesh();
+>>>>>>> master
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	ID3D11Buffer* vba = cubeMesh1->GetVertexBuffer();
@@ -490,7 +539,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	context->IASetIndexBuffer(sphereMesh2->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 	testCube2->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 32, dirLight, dirLight2);
 	context->DrawIndexed(sphereMesh2->GetIndexCount(), 0, 0);
-
+	*/
 
 	for (auto entity : entities) {
 		if (!entity->IsActive()) continue;
@@ -503,6 +552,38 @@ void Game::Draw(float deltaTime, float totalTime)
 		entity->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), dirLight, dirLight2);
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
+
+	//
+	stride = sizeof(Vertex);
+	offset = 0;
+
+	//render sky, must occur after all solid objects
+	ID3D11Buffer* skyboxVB = skybox->GetVertexBuffer();
+	ID3D11Buffer* skyboxIB = skybox->GetIndexBuffer();
+
+	context->IASetVertexBuffers(0, 1, &skyboxVB, &stride, &offset);
+	context->IASetIndexBuffer(skyboxIB, DXGI_FORMAT_R32_UINT, 0);
+
+	skyboxVS->SetMatrix4x4("view", camera->GetViewMatrix());
+	skyboxVS->SetMatrix4x4("projection", camera->GetProjectionMatrix());
+	skyboxVS->CopyAllBufferData();
+	skyboxVS->SetShader();
+
+	skyboxPS->SetShaderResourceView("Skybox", skyboxSRV);
+	skyboxPS->SetSamplerState("Sampler", sampler);
+	skyboxPS->CopyAllBufferData();
+	skyboxPS->SetShader();
+
+	context->RSSetState(rsSkybox);
+	context->OMSetDepthStencilState(dsSkybox, 0);
+	context->DrawIndexed(skybox->GetIndexCount(),0,0);
+
+	context->RSSetState(0);
+	context->OMSetDepthStencilState(0, 0);
+
+	// Draw particles
+	simpleEmitter->Draw(context, camera, deltaTime, totalTime);
+
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it
 	//  - Do this exactly ONCE PER FRAME (always at the very end of the frame)

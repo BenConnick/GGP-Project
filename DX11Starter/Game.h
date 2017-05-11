@@ -10,11 +10,13 @@
 #include "SMParser.h"
 #include <DirectXMath.h>
 #include <vector>
+#include <fmod.h>
 #include <fmod_common.h>
 #include <fmod.hpp>
 #include "Player.h"
 #include "Rail.h"
 #include "MusicNodeManager.h"
+#include "ParticleEmitter.h"
 
 class Game
 	: public DXCore
@@ -57,6 +59,13 @@ private:
 
 	SimpleVertexShader* terrainVS;
 
+	Mesh* skybox;
+	ID3D11ShaderResourceView* skyboxSRV;
+	ID3D11RasterizerState*  rsSkybox;
+	ID3D11DepthStencilState* dsSkybox;
+	SimpleVertexShader* skyboxVS;
+	SimplePixelShader* skyboxPS;
+
 	// The matrices to go from model space to screen space
 	DirectX::XMFLOAT4X4 worldMatrix;
 	DirectX::XMFLOAT4X4 viewMatrix;
@@ -88,5 +97,15 @@ private:
 	vector<Entity*> noteMarkers;
 	SMParser parser = SMParser();
 	// ----
+
+	// Effects
+	// Particle stuff
+	ID3D11ShaderResourceView* particleTexture;
+	ID3D11BlendState* particleBlendState;
+	ID3D11DepthStencilState* particleDepthState;
+	Emitter* simpleEmitter;
+	SimpleVertexShader* particleVS;
+	SimplePixelShader* particlePS;
+	SimpleGeometryShader* particleGS;
 };
 
