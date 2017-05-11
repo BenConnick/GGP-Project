@@ -596,14 +596,11 @@ void Game::Draw(float deltaTime, float totalTime)
 		entity->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), dirLight, dirLight2);
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
-	
-	// Draw particles
-	simpleEmitter->Draw(context,camera,deltaTime,totalTime);
-	//*/
-	///*
+
+	//
 	stride = sizeof(Vertex);
 	offset = 0;
-	//*/
+
 	//render sky, must occur after all solid objects
 	ID3D11Buffer* skyboxVB = skybox->GetVertexBuffer();
 	ID3D11Buffer* skyboxIB = skybox->GetIndexBuffer();
@@ -627,6 +624,9 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	context->RSSetState(0);
 	context->OMSetDepthStencilState(0, 0);
+
+	// Draw particles
+	simpleEmitter->Draw(context, camera, deltaTime, totalTime);
 
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it
