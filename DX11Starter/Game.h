@@ -32,6 +32,7 @@ public:
 	void OnResize();
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
+	void RenderDepthBuffer(float* freqs, float deltaTime, float totalTime);
 
 	// Overridden mouse input helper methods
 	void OnMouseDown(WPARAM buttonState, int x, int y);
@@ -49,13 +50,25 @@ private:
 	std::vector<Mesh*> meshes;
 	std::vector<Entity*> entities;
 	std::vector<Material*> materials;
-	Entity* testCube1;
-	Entity* testCube2;
+	Entity* terrainL;
+	Entity* terrainR;
 
 	// Wrappers for DirectX shaders to provide simplified functionality
 	SimpleVertexShader* vertexShader;
 	SimplePixelShader* pixelShader;
 	ID3D11SamplerState* sampler;
+
+	ID3D11RenderTargetView* dofRTV;
+	ID3D11ShaderResourceView* dofSRV;
+	ID3D11RenderTargetView* dofBlurRTV;
+	ID3D11ShaderResourceView* dofBlurSRV;
+	ID3D11DepthStencilView* depthDSV;
+	ID3D11ShaderResourceView* depthSRV;
+	ID3D11RasterizerState* depthRS;
+	SimpleVertexShader* depthVS;
+	SimpleVertexShader* dofVS;
+	SimplePixelShader* dofPS;
+	SimplePixelShader* dofBlurPS;
 
 	SimpleVertexShader* terrainVS;
 

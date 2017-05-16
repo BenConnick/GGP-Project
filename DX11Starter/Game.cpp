@@ -82,9 +82,6 @@ Game::~Game()
 		delete entity;
 	}
 
-	delete testCube1;
-	delete testCube2;
-
 	for (auto material : materials) {
 		delete material;
 	}
@@ -169,7 +166,7 @@ void Game::Init()
 	HRESULT hr = CreateDDSTextureFromFile(device, L"Assets/Textures/skybox3.dds", 0, &skyboxSRV);
 	//printf(hr);
 	//CreateWICTextureFromFile(device, L"Assets/Textures/skybox.dds", 0, &skyboxSRV);
-	
+
 	// Create a sampler state for texture sampling
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -193,6 +190,81 @@ void Game::Init()
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	device->CreateDepthStencilState(&dsDesc, &dsSkybox);
+
+	D3D11_TEXTURE2D_DESC textureDesc = {};
+	textureDesc.Width = width;
+	textureDesc.Height = height;
+	textureDesc.ArraySize = 1;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.MipLevels = 1;
+	textureDesc.MiscFlags = 0;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	ID3D11Texture2D* dofTexture;
+	device->CreateTexture2D(&textureDesc, 0, &dofTexture);
+	ID3D11Texture2D* dofBlurTexture;
+	device->CreateTexture2D(&textureDesc, 0, &dofBlurTexture);
+
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = textureDesc.Format;
+	rtvDesc.Texture2D.MipSlice = 0;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+
+	device->CreateRenderTargetView(dofTexture, &rtvDesc, &dofRTV);
+	device->CreateRenderTargetView(dofBlurTexture, &rtvDesc, &dofBlurRTV);
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = textureDesc.Format;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+
+	device->CreateShaderResourceView(dofTexture, &srvDesc, &dofSRV);
+	device->CreateShaderResourceView(dofBlurTexture, &srvDesc, &dofBlurSRV);
+	dofTexture->Release();
+	dofBlurTexture->Release();
+
+	D3D11_TEXTURE2D_DESC depthTexDesc = {};
+	depthTexDesc.Width = width;
+	depthTexDesc.Height = height;
+	depthTexDesc.ArraySize = 1;
+	depthTexDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	depthTexDesc.CPUAccessFlags = 0;
+	depthTexDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	depthTexDesc.MipLevels = 1;
+	depthTexDesc.SampleDesc.Count = 1;
+	depthTexDesc.SampleDesc.Quality = 0;
+	depthTexDesc.Usage = D3D11_USAGE_DEFAULT;
+	ID3D11Texture2D* depthBuffer;
+	device->CreateTexture2D(&depthTexDesc, 0, &depthBuffer);
+
+	D3D11_DEPTH_STENCIL_VIEW_DESC dofDepthDesc = {};
+	dofDepthDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dofDepthDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	dofDepthDesc.Texture2D.MipSlice = 0;
+	device->CreateDepthStencilView(depthBuffer, &dofDepthDesc, &depthDSV);
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC depthSrvDesc = {};
+	depthSrvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	depthSrvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	depthSrvDesc.Texture2D.MipLevels = 1;
+	depthSrvDesc.Texture2D.MostDetailedMip = 0;
+	device->CreateShaderResourceView(depthBuffer, &depthSrvDesc, &depthSRV);
+
+	depthBuffer->Release();
+
+	D3D11_RASTERIZER_DESC depthRastDesc = {};
+	depthRastDesc.FillMode = D3D11_FILL_SOLID;
+	depthRastDesc.CullMode = D3D11_CULL_BACK;
+	depthRastDesc.DepthClipEnable = true;
+	depthRastDesc.DepthBias = 1000;
+	depthRastDesc.DepthBiasClamp = 0.0f;
+	depthRastDesc.SlopeScaledDepthBias = 1.0f;
+	device->CreateRasterizerState(&depthRastDesc, &depthRS);
 
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -238,6 +310,19 @@ void Game::LoadShaders()
 	skyboxPS = new SimplePixelShader(device, context);
 	if (!skyboxPS->LoadShaderFile(L"x64/Debug/SkyboxPS.cso")) 
 		skyboxPS->LoadShaderFile(L"SkyboxPS.cso");
+
+	depthVS = new SimpleVertexShader(device, context);
+	if (!depthVS->LoadShaderFile(L"x64/Debug/DepthVS.cso"))
+		depthVS->LoadShaderFile(L"DepthVS.cso");
+	dofVS = new SimpleVertexShader(device, context);
+	if (!dofVS->LoadShaderFile(L"x64/Debug/DepthOfFieldVS.cso"))
+		dofVS->LoadShaderFile(L"DepthOfFieldVS.cso");
+	dofPS = new SimplePixelShader(device, context);
+	if (!dofPS->LoadShaderFile(L"x64/Debug/DepthOfFieldPS.cso"))
+		dofPS->LoadShaderFile(L"DepthOfFieldPS.cso");
+	dofBlurPS = new SimplePixelShader(device, context);
+	if (!dofBlurPS->LoadShaderFile(L"x64/Debug/DepthOfFieldBlurPS.cso"))
+		dofBlurPS->LoadShaderFile(L"DepthOfFieldBlurPS.cso");
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
 
@@ -337,6 +422,9 @@ void Game::CreateBasicGeometry()
 	Mesh* car = new Mesh("Assets/Models/Porsche_911_GT2.obj", device);
 	meshes.push_back(car);
 
+	Mesh* terrainMesh = new Mesh(8, 8, device);
+	meshes.push_back(terrainMesh);
+
 	skybox = cube;
 
 	Material* defMaterial = new Material(vertexShader, pixelShader, metalTex, sampler);
@@ -346,10 +434,22 @@ void Game::CreateBasicGeometry()
 	Material* dynMaterial = new Material(terrainVS, pixelShader, terrainTex, sampler);
 	materials.push_back(dynMaterial);
 
-	testCube1 = new Entity(sphere, dynMaterial);
-	testCube2 = new Entity(sphere, dynMaterial);
-	testCube1->SetPosition({ -1.0f, 1.0f, 1.0f });
-	testCube2->SetPosition({ 1.0f,1.0f,1.0f });
+	//testCube1 = new Entity(sphere, dynMaterial);
+	//testCube2 = new Entity(sphere, dynMaterial);
+	//testCube1->SetPosition({ -1.0f, 1.0f, 1.0f });
+	//testCube2->SetPosition({ 1.0f,1.0f,1.0f });
+
+	terrainL = new Entity(terrainMesh, dynMaterial);
+	terrainL->SetPosition({ -3.5f, -2.0f, 0.0f });
+	terrainL->SetRotation({ 0.0f, 0.0f, 0.0f });
+	terrainL->SetScale({ 1.0f, 1.0f, 5.0f });
+	terrainL->Activate();
+	
+	terrainR = new Entity(terrainMesh, dynMaterial);
+	terrainR->SetRotation({ 0.0f, 3.14f, 0.0f });
+	terrainR->SetPosition({ +3.5f, -2.0f, 0.0f });
+	terrainR->SetScale({ 1.0f, 1.0f, 5.0f });
+	terrainR->Activate();
 
 	Entity* playerEnt = new Entity(car, defMaterial);
   
@@ -440,19 +540,21 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
-	float freqs[32];
-	memset(freqs, 0, sizeof(float) * 32);
+	float freqs[64];
+	memset(freqs, 0, sizeof(float) * 64);
 
 	bool songNotStarted;
 	songChannel->getPaused(&songNotStarted);
 	//get some song data
 	if (!songNotStarted && totalTime >= 6.0f) {
 		dsp->getParameterData(FMOD_DSP_FFT_SPECTRUMDATA, (void**)&fft, 0, 0, 0);
-		for (int i = 0; i < 32; i++) {
+		for (int i = 0; i < 64; i++) {
 			if (fft->spectrum[0] == nullptr) break;
 			freqs[i] = fft->spectrum[0][i];
 		}
 	}
+
+	RenderDepthBuffer(freqs, deltaTime, totalTime);
 
 	// Background color (Cornflower Blue in this case) for clearing
 	//const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
@@ -467,6 +569,11 @@ void Game::Draw(float deltaTime, float totalTime)
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f,
 		0);
+
+	context->OMSetRenderTargets(1, &dofRTV, depthStencilView);
+	context->ClearRenderTargetView(dofRTV, color);
+
+
 
 	//// Send data to shader variables
 	////  - Do this ONCE PER OBJECT you're drawing
@@ -520,7 +627,7 @@ void Game::Draw(float deltaTime, float totalTime)
 			0);
 	}*/
 
-	Mesh* cubeMesh1 = testCube1->GetMesh();
+	
 
 
 	/*Mesh* cubeMesh1 = testCube1->GetMesh();
@@ -553,6 +660,17 @@ void Game::Draw(float deltaTime, float totalTime)
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
 
+	Mesh* mesh = terrainL->GetMesh();
+	ID3D11Buffer* vb = mesh->GetVertexBuffer();
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+	context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	terrainL->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 64, dirLight, dirLight2);
+	context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
+	terrainR->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 64, dirLight, dirLight2);
+	context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	//
 	stride = sizeof(Vertex);
 	offset = 0;
@@ -584,10 +702,85 @@ void Game::Draw(float deltaTime, float totalTime)
 	// Draw particles
 	simpleEmitter->Draw(context, camera, deltaTime, totalTime);
 
+	context->OMSetRenderTargets(1, &dofBlurRTV, 0);
+	dofVS->SetShader();
+	
+	dofBlurPS->SetShader();
+	dofBlurPS->SetShaderResourceView("Pixels", dofSRV);
+	dofBlurPS->SetSamplerState("Sampler", sampler);
+	dofBlurPS->SetFloat("pixelWidth", 1.0f / width);
+	dofBlurPS->SetFloat("pixelHeight", 1.0f / height);
+	dofBlurPS->SetInt("blurAmount", 3);
+	dofBlurPS->CopyAllBufferData();
+
+	ID3D11Buffer* nothing = 0;
+	context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+	context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+
+	context->Draw(3, 0);
+	
+	dofBlurPS->SetShaderResourceView("Pixels", 0);
+
+	context->OMSetRenderTargets(1, &backBufferRTV, 0);
+	
+	dofPS->SetShader();
+	dofPS->SetShaderResourceView("Unblurred", dofSRV);
+	dofPS->SetShaderResourceView("Blurred", dofBlurSRV);
+	dofPS->SetShaderResourceView("DepthBuffer", depthSRV);
+	dofPS->SetSamplerState("Sampler", sampler);
+	dofPS->SetFloat("Distance", 1.25f);
+	dofPS->SetFloat("Range", 2.25f);
+	dofPS->SetFloat("Near", 0.5f);
+	dofPS->SetFloat("Far", 5.0f);
+	dofPS->CopyAllBufferData();
+
+	context->Draw(3, 0);
+	
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it
 	//  - Do this exactly ONCE PER FRAME (always at the very end of the frame)
 	swapChain->Present(0, 0);
+}
+
+void Game::RenderDepthBuffer(float* freqs, float deltaTime, float totalTime) {
+	context->OMSetRenderTargets(0, 0, depthDSV);
+	context->ClearDepthStencilView(depthDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	context->RSSetState(depthRS);
+
+	depthVS->SetShader();
+	depthVS->SetMatrix4x4("view", camera->GetViewMatrix());
+	depthVS->SetMatrix4x4("projection", camera->GetProjectionMatrix());
+
+	context->PSSetShader(0, 0, 0);
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+
+	for (auto entity : entities) {
+		if (!entity->IsActive()) continue;
+		Mesh* mesh = entity->GetMesh();
+		ID3D11Buffer* vb = mesh->GetVertexBuffer();
+		context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+		context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		entity->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), dirLight, dirLight2);
+		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
+	}
+
+	Mesh* mesh = terrainL->GetMesh();
+	ID3D11Buffer* vb = mesh->GetVertexBuffer();
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+	context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	terrainL->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 64, dirLight, dirLight2);
+	context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
+	terrainR->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 64, dirLight, dirLight2);
+	context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	simpleEmitter->Draw(context, camera, deltaTime, totalTime);
+
+	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
+	context->RSSetState(0);
 }
 
 
