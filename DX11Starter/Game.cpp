@@ -275,6 +275,8 @@ void Game::LoadShaders()
 	particleGS = new SimpleGeometryShader(device, context);
 	if (!particleGS->LoadShaderFile(L"x64/Debug/ParticleGS.cso"))
 		particleGS->LoadShaderFile(L"ParticleGS.cso");
+	particleGS->SetFloat("pixelWidth", 1.0f / width);
+	particleGS->SetFloat("pixelHeight", 1.0f / height);
 
 	terrainVS = new SimpleVertexShader(device, context);
 	if (!terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso"))
@@ -570,8 +572,6 @@ void Game::Draw(float deltaTime, float totalTime)
 	context->OMSetDepthStencilState(0, 0);
 
 	// Draw particles
-	particlePS->SetFloat("pixelWidth", 1.0f / width);
-	particlePS->SetFloat("pixelHeight", 1.0f / height);
 	simpleEmitter->Draw(context, camera, deltaTime, totalTime);
 
 	// Get ready for post processing ====================

@@ -24,6 +24,10 @@ void ParticleManager::EmitSmallParticle(XMFLOAT3 pos, XMFLOAT3 vel) {
 	emitter->SpawnNewParticle(pos, vel, XMFLOAT4(1,1,1,1),XMFLOAT4(1,1,1,0.5), XMFLOAT4(1,1,1,0),XMFLOAT3(0.1,0.1,0.1));
 }
 
+void ParticleManager::EmitMedParticle(XMFLOAT3 pos, XMFLOAT3 vel) {
+	emitter->SpawnNewParticle(pos, vel, XMFLOAT4(1, 1, 1, 1), XMFLOAT4(1, 1, 1, 0.5), XMFLOAT4(1, 1, 1, 0), XMFLOAT3(1, 1, 1));
+}
+
 void ParticleManager::EmitSkyParticle(XMFLOAT3 pos, XMFLOAT3 vel, XMFLOAT4 color) {
 	emitter->SpawnNewParticle(pos, vel, XMFLOAT4(color.x,color.y,color.z,0), color, color, XMFLOAT3(10.1, 10.1, 10.1));
 }

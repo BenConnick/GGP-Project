@@ -38,7 +38,7 @@ void MusicNode::SetTime(float t)
 }void MusicNode::SetRail(int r)
 {
 	currentRail = r;
-	ParticleManager::GetInstance().EmitSkyParticle(rails->GetRail(currentRail)->GetAttachPoint(0), XMFLOAT3(0, 0, -10), XMFLOAT4(1,1,1,1));
+	ParticleManager::GetInstance().EmitMedParticle(rails->GetRail(currentRail)->GetAttachPoint(0), XMFLOAT3(0, 0, -10));
 }
 
 void MusicNode::Update(float deltaTime)

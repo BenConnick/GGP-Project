@@ -15,6 +15,5 @@ SamplerState trilinear		: register(s0);
 // Entry point for this pixel shader
 float4 main(GStoPS input) : SV_TARGET
 {
-	//return particleTexture.Sample(trilinear, float2(input.uv.x * pixelWidth, input.uv.y)) * input.color;
 	return particleTexture.Sample(trilinear, input.uv) * input.color;
 }

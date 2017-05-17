@@ -4,6 +4,8 @@ cbuffer externalData : register(b0)
 	matrix world;
 	matrix view;
 	matrix projection;
+	float pixelWidth;
+	float pixelHeight;
 };
 
 struct VStoGS
@@ -34,6 +36,7 @@ void main(point VStoGS input[1], inout TriangleStream<GStoPS> outStream)
 
 	// Offsets for smaller triangles
 	float2 offsets[4];
+	float ratio = (pixelWidth / pixelHeight);
 	offsets[0] = float2(-0.1f, -0.1f);
 	offsets[1] = float2(-0.1f, +0.1f);
 	offsets[2] = float2(+0.1f, -0.1f);
@@ -53,7 +56,8 @@ void main(point VStoGS input[1], inout TriangleStream<GStoPS> outStream)
 		float depthChange = output.position.z / output.position.w * 5.0f;
 
 		// Adjust based on depth
-		output.position.xy += offsets[o] * depthChange * input[0].size;
+		float2 off = float2(offsets[o].x * ratio, offsets[o].y);
+		output.position.xy += off * depthChange * input[0].size;
 		output.color = input[0].color;
 		output.uv = saturate(offsets[o] * 10);
 
