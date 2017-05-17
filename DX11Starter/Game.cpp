@@ -102,7 +102,11 @@ Game::~Game()
 	skyboxSRV->Release();
 	delete skyboxVS;
 	delete skyboxPS;
-
+	
+	ppsrv->Release();
+	ppRenderTargetView->Release();
+	delete ppVS;
+	delete ppPS;
 
 	//delete fft;
 
@@ -188,6 +192,44 @@ void Game::Init()
 	rsDesc.DepthClipEnable = true;
 	device->CreateRasterizerState(&rsDesc, &rsSkybox);
 
+	// post process effects
+	D3D11_TEXTURE2D_DESC textureDesc = {};
+	textureDesc.Width = width;
+	textureDesc.Height = height;
+	textureDesc.ArraySize = 1;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.MipLevels = 1;
+	textureDesc.MiscFlags = 0;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	// set up render target
+	ID3D11Texture2D* ppTexture;
+	device->CreateTexture2D(&textureDesc, 0, &ppTexture);
+
+	// Create the Render Target View
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = textureDesc.Format;
+	rtvDesc.Texture2D.MipSlice = 0;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+
+	device->CreateRenderTargetView(ppTexture, &rtvDesc, &ppRenderTargetView);
+
+	// Create the Shader Resource View
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = textureDesc.Format;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+
+	device->CreateShaderResourceView(ppTexture, &srvDesc, &ppsrv);
+
+	// We don't need the texture reference itself no mo'
+	ppTexture->Release();
+
 	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
 	dsDesc.DepthEnable = true;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
@@ -243,6 +285,15 @@ void Game::LoadShaders()
 	skyboxPS = new SimplePixelShader(device, context);
 	if (!skyboxPS->LoadShaderFile(L"x64/Debug/SkyboxPS.cso")) 
 		skyboxPS->LoadShaderFile(L"SkyboxPS.cso");
+
+	ppVS = new SimpleVertexShader(device, context);
+	if (!ppVS->LoadShaderFile(L"x64/Debug/PPVS.cso"))
+		ppVS->LoadShaderFile(L"PPVS.cso");
+	ppPS = new SimplePixelShader(device, context);
+	if (!ppPS->LoadShaderFile(L"x64/Debug/PPPS.cso"))
+		ppPS->LoadShaderFile(L"PPPS.cso");
+
+	cout << ppPS;
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
 
@@ -491,7 +542,6 @@ void Game::Draw(float deltaTime, float totalTime)
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
 
-	//
 	stride = sizeof(Vertex);
 	offset = 0;
 
@@ -520,17 +570,19 @@ void Game::Draw(float deltaTime, float totalTime)
 	context->OMSetDepthStencilState(0, 0);
 
 	// Draw particles
+	particlePS->SetFloat("pixelWidth", 1.0f / width);
+	particlePS->SetFloat("pixelHeight", 1.0f / height);
 	simpleEmitter->Draw(context, camera, deltaTime, totalTime);
 
 	// Get ready for post processing ====================
 	context->OMSetRenderTargets(1, &backBufferRTV, 0);
 
-	// Turn on VS (no other data necessary)
+	// Turn on VS (no args)
 	ppVS->SetShader();
 
 	// Turn on PS
 	ppPS->SetShader();
-	ppPS->SetShaderResourceView("Pixels", ppSRV);
+	ppPS->SetShaderResourceView("Pixels", ppsrv);
 	ppPS->SetSamplerState("Sampler", sampler);
 	ppPS->SetFloat("pixelWidth", 1.0f / width);
 	ppPS->SetFloat("pixelHeight", 1.0f / height);

@@ -1,5 +1,5 @@
 #include "MusicNode.h"
-
+#include "ParticleManager.h"
 
 MusicNode::MusicNode(Entity* e, RailSet* r, float t, int currentR)
 {
@@ -8,7 +8,6 @@ MusicNode::MusicNode(Entity* e, RailSet* r, float t, int currentR)
 	entity->SetScale({ defaultScale,defaultScale,defaultScale });
 	time = t;
 	currentRail = currentR;
-
 }
 
 
@@ -39,6 +38,7 @@ void MusicNode::SetTime(float t)
 }void MusicNode::SetRail(int r)
 {
 	currentRail = r;
+	ParticleManager::GetInstance().EmitSkyParticle(rails->GetRail(currentRail)->GetAttachPoint(0), XMFLOAT3(0, 0, -10), XMFLOAT4(1,1,1,1));
 }
 
 void MusicNode::Update(float deltaTime)

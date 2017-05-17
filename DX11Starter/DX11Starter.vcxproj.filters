@@ -123,9 +123,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ParticleEmitter.h">
-		<Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -149,7 +146,7 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="SpawnVS.hlsl">
-		<Filter>Shaders</Filter>
+      <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="TerrainVS.hlsl">
       <Filter>Shaders</Filter>
@@ -158,6 +155,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="SkyboxPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PPVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PPPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
