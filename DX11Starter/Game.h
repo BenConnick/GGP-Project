@@ -99,6 +99,10 @@ private:
 	// ----
 
 	// Effects
+	ID3D11Texture2D* ppRenderTarget;
+	ID3D11RenderTargetView* ppRenderTargetView;
+	ID3D11ShaderResourceView* ppsrv;
+
 	// Particle stuff
 	ID3D11ShaderResourceView* particleTexture;
 	ID3D11BlendState* particleBlendState;

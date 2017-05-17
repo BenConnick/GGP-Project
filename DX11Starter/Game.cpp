@@ -196,6 +196,11 @@ void Game::Init()
 
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	// Effects
+	/*ppRenderTarget = new ID3D11Texture2D();
+	renderTargetView;
+	ppsrv;
+	*/
 	// load song beatmap, print success
 	cout << "songs loaded: " << parser.OpenFile("Assets/Beatmaps/song.sm");
 }
@@ -455,7 +460,6 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 
 	// Background color (Cornflower Blue in this case) for clearing
-	//const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 	const float color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	// Clear the render target and depth buffer (erases what's on the screen)
@@ -468,78 +472,12 @@ void Game::Draw(float deltaTime, float totalTime)
 		1.0f,
 		0);
 
-	//// Send data to shader variables
-	////  - Do this ONCE PER OBJECT you're drawing
-	////  - This is actually a complex process of copying data to a local buffer
-	////    and then copying that entire buffer to the GPU.  
-	////  - The "SimpleShader" class handles all of that for you.
-	//vertexShader->SetMatrix4x4("view", camera->GetViewMatrix());
-	//vertexShader->SetMatrix4x4("projection", camera->GetProjectionMatrix());
+	// Set up the post process render target =======================
+	context->OMSetRenderTargets(1, &ppRenderTargetView, depthStencilView);
+	context->ClearRenderTargetView(ppRenderTargetView, color);
 
-	// Once you've set all of the data you care to change for
-	// the next draw call, you need to actually send it to the GPU
-	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
-	//vertexShader->CopyAllBufferData();
-
-	// Set the vertex and pixel shaders to use for the next Draw() command
-	//  - These don't technically need to be set every frame...YET
-	//  - Once you start applying different shaders to different objects,
-	//    you'll need to swap the current shaders before each draw
-	//vertexShader->SetShader();
-	//pixelShader->SetShader();
-
-	// Set buffers in the input assembler
-	//  - Do this ONCE PER OBJECT you're drawing, since each object might
-	//    have different geometry.
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
-	//context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-	//context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-	// Finally do the actual drawing
-	//  - Do this ONCE PER OBJECT you intend to draw
-	//  - This will use all of the currently set DirectX "stuff" (shaders, buffers, etc)
-	//  - DrawIndexed() uses the currently set INDEX BUFFER to look up corresponding
-	//     vertices in the currently set VERTEX BUFFER
-	//context->DrawIndexed(
-	//	3,     // The number of indices to use (we could draw a subset if we wanted)
-	//	0,     // Offset to the first index we want to use
-	//	0);    // Offset to add to each index when looking up vertices
-
-	/*
-	//for (auto mesh : meshes) {
-		UINT stride = sizeof(Vertex);
-		UINT offset = 0;
-		ID3D11Buffer* vb = mesh->GetVertexBuffer();
-		context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
-		context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-
-		context->DrawIndexed(
-			mesh->GetIndexCount(),
-			0,
-			0);
-	}*/
-
-	Mesh* cubeMesh1 = testCube1->GetMesh();
-
-
-	/*Mesh* cubeMesh1 = testCube1->GetMesh();
->>>>>>> master
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	ID3D11Buffer* vba = cubeMesh1->GetVertexBuffer();
-	context->IAGetVertexBuffers(0, 1, &vba, &stride, &offset);
-	context->IASetIndexBuffer(cubeMesh1->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-	testCube1->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 32, dirLight, dirLight2);
-	context->DrawIndexed(cubeMesh1->GetIndexCount(), 0, 0);
-
-	Mesh* sphereMesh2 = testCube2->GetMesh();
-	vba = sphereMesh2->GetVertexBuffer();
-	context->IAGetVertexBuffers(0, 1, &vba, &stride, &offset);
-	context->IASetIndexBuffer(sphereMesh2->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-	testCube2->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 32, dirLight, dirLight2);
-	context->DrawIndexed(sphereMesh2->GetIndexCount(), 0, 0);
-	*/
 
 	for (auto entity : entities) {
 		if (!entity->IsActive()) continue;
@@ -583,6 +521,32 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	// Draw particles
 	simpleEmitter->Draw(context, camera, deltaTime, totalTime);
+
+	// Get ready for post processing ====================
+	context->OMSetRenderTargets(1, &backBufferRTV, 0);
+
+	// Turn on VS (no other data necessary)
+	ppVS->SetShader();
+
+	// Turn on PS
+	ppPS->SetShader();
+	ppPS->SetShaderResourceView("Pixels", ppSRV);
+	ppPS->SetSamplerState("Sampler", sampler);
+	ppPS->SetFloat("pixelWidth", 1.0f / width);
+	ppPS->SetFloat("pixelHeight", 1.0f / height);
+	ppPS->SetInt("blurAmount", 5);
+	ppPS->CopyAllBufferData();
+
+	// Turn off vertex and index buffers
+	ID3D11Buffer* nothing = 0;
+	context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+	context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+
+	// Draw the post process (3 verts = 1 triangle to fill the screen)
+	context->Draw(3, 0);
+
+	// Unbind the post process SRV
+	ppPS->SetShaderResourceView("Pixels", 0);
 
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it

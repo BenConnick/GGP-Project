@@ -149,6 +149,8 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="SpawnVS.hlsl">
+		<Filter>Shaders</Filter>
+    </FxCompile>
     <FxCompile Include="TerrainVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
