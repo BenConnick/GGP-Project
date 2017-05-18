@@ -6,6 +6,7 @@ Camera::Camera(unsigned int width, unsigned int height)
 {
 	XMMATRIX identity = XMMatrixIdentity();
 	_position = XMFLOAT3(0, 0, -5);
+	truePosition = _position;
 	_xRot = 0;
 	_yRot = 0;
 	XMStoreFloat4x4(&_viewMatrix, identity);
@@ -32,6 +33,12 @@ XMFLOAT4X4 Camera::GetProjectionMatrix()
 	return _projectionMatrix;
 }
 
+void Camera::Shake(float duration, float frequency, float magnitude) {
+	shakeTimer = duration;
+	shakeFreq = frequency;
+	shakeMagnitude = magnitude;
+}
+
 void Camera::Update(float deltaTime)
 {
 	XMFLOAT3 xAxis = XMFLOAT3(1, 0, 0);
@@ -40,6 +47,11 @@ void Camera::Update(float deltaTime)
 	XMVECTOR rotation = XMQuaternionRotationRollPitchYaw(_xRot, _yRot, 0);
 	XMVECTOR direction = XMVector3Rotate(XMLoadFloat3(&forward), rotation);
 	XMVECTOR xDirection = XMVector3Rotate(XMLoadFloat3(&xAxis), rotation);
+
+	if (shakeTimer > 0) {
+		shakeTimer -= deltaTime;
+		_position = XMFLOAT3(truePosition.x, truePosition.y + sin(shakeTimer * shakeFreq) * shakeMagnitude, truePosition.z);
+	}
 
 	if (_userControlled) {
 		if (GetAsyncKeyState('W') & 0x8000) {

@@ -502,7 +502,7 @@ void Game::CreateBasicGeometry()
 	player = new Player(playerEnt, railPositions);
 	entities.push_back(playerEnt);
   
-	nodeManager = new MusicNodeManager(player, railPositions, cube, woodMaterial,&entities,&parser);
+	nodeManager = new MusicNodeManager(player, railPositions, cube, woodMaterial,&entities,&parser, camera);
 	///*
 	for (int j = 1; j < 7; j++) {
 		//Entity* nodeEnt = new Entity(cube, woodMaterial);

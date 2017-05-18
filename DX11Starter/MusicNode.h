@@ -2,7 +2,7 @@
 #include "Mesh.h"
 #include "Entity.h"
 #include "Rail.h"
-#include "RailSet.h"
+#include "Camera.h"
 
 //node is either alive on rails, playing a hit or miss animation, or is done and ready to be removed
 enum NodeState {
@@ -12,7 +12,7 @@ enum NodeState {
 class MusicNode
 {
 public:
-	MusicNode(Entity* e, std::vector<XMFLOAT3>* positions, float t, int currentR);
+	MusicNode(Entity* e, std::vector<XMFLOAT3>* positions, float t, int currentR, Camera* cam);
 	~MusicNode();
 
 	//Getters and setters
@@ -43,4 +43,6 @@ private:
 	float currentScale = defaultScale;
 
 	float CONST animationSpeed = 8.0f;
+
+	Camera* camera;
 };

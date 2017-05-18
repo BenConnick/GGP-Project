@@ -1,13 +1,14 @@
 #include "MusicNode.h"
 #include "ParticleManager.h"
 
-MusicNode::MusicNode(Entity* e, std::vector<XMFLOAT3>* positions, float t, int currentR)
+MusicNode::MusicNode(Entity* e, std::vector<XMFLOAT3>* positions, float t, int currentR, Camera* cam)
 {
 	rails = positions;
 	entity = e;
 	entity->SetScale({ defaultScale,defaultScale,defaultScale });
 	time = t;
 	currentRail = currentR;
+	camera = cam;
 }
 
 
@@ -69,6 +70,7 @@ void MusicNode::Update(float deltaTime)
 void MusicNode::Hit()
 {
 	state = NodeState::HIT;
+	camera->Shake(0.1, 100, 0.1f);
 }
 void MusicNode::Miss()
 {
