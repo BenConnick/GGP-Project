@@ -21,8 +21,8 @@ Game::Game(HINSTANCE hInstance)
 	: DXCore(
 		hInstance,		   // The application's handle
 		"DirectX Game",	   // Text for the window's title bar
-		1280,			   // Width of the window's client area
-		720,			   // Height of the window's client area
+		1920,			   // Width of the window's client area
+		1017,			   // Height of the window's client area
 		true)			   // Show extra stats (fps) in title bar?
 {
 	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
@@ -645,6 +645,12 @@ void Game::Draw(float deltaTime, float totalTime)
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
 	terrainPS->SetFloat("time", totalTime);
+	terrainR->SetRotation({ 0.0f, 3.14f, 0.0f });
+	terrainR->SetPosition({ +17.4f, -2.0f, 0.0f });
+	terrainR->SetScale({ 5.0f, 5.0f, 25.0f });
+	terrainL->SetPosition({ -17.4f, -2.0f, 0.0f });
+	terrainL->SetRotation({ 0.0f, 0.0f, 0.0f });
+	terrainL->SetScale({ 5.0f, 5.0f, 25.0f });
 	Mesh* mesh = terrainL->GetMesh();
 	ID3D11Buffer* vb = mesh->GetVertexBuffer();
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
@@ -692,8 +698,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	dofPS->SetShaderResourceView("Blurred", dofBlurSRV);
 	dofPS->SetShaderResourceView("DepthBuffer", depthSRV);
 	dofPS->SetSamplerState("Sampler", sampler);
-	dofPS->SetFloat("Distance", 1.25f);
-	dofPS->SetFloat("Range", 2.25f);
+	dofPS->SetFloat("Distance", 1.75f);
+	dofPS->SetFloat("Range", 2.0f);
 	dofPS->SetFloat("Near", 0.5f);
 	dofPS->SetFloat("Far", 5.0f);
 	dofPS->CopyAllBufferData();
