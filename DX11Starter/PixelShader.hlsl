@@ -25,10 +25,13 @@ struct DirectionalLight {
 cbuffer externalData : register(b0) {
 	DirectionalLight light;
 	DirectionalLight light2;
+	float3 CameraPosition;
+	float reflectivity;
 }
 
 Texture2D diffuseTexture : register(t0);
 SamplerState basicSampler : register(s0);
+TextureCube Skybox		: register(t2);
 
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
@@ -58,6 +61,11 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float4 res2 = (light2.DiffuseColor * amt2) + light.AmbientColor;
 
 	float4 texColor = diffuseTexture.Sample(basicSampler, input.uv);
+	
+	float3 toCamera = normalize(CameraPosition - input.position);
+	// Sample the skybox
+	float4 skyColor = Skybox.Sample(basicSampler, reflect(-toCamera, input.normal));
 
-	return (res1 + res2) * texColor;
+	float4 litColor = (res1 + res2) * texColor;
+	return lerp(litColor, skyColor, reflectivity);
 }

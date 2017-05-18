@@ -18,6 +18,12 @@ Material::~Material()
 	_texture = nullptr;
 }
 
+float Material::GetReflectivity() {
+	return reflective;
+}
+void Material::SetReflective(float refl) {
+	reflective = refl;
+}
 SimpleVertexShader * Material::GetVertexShader()
 {
 	return _vertexShader;

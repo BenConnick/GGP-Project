@@ -16,6 +16,7 @@
 #include "Player.h"
 #include "Rail.h"
 #include "MusicNodeManager.h"
+#include "CubeMap.h"
 #include "ParticleEmitter.h"
 
 class Game
@@ -39,6 +40,7 @@ public:
 	void OnMouseUp(WPARAM buttonState, int x, int y);
 	void OnMouseMove(WPARAM buttonState, int x, int y);
 	void OnMouseWheel(float wheelDelta, int x, int y);
+
 private:
 
 	// Initialization helper methods - feel free to customize, combine, etc.
@@ -73,12 +75,7 @@ private:
 	SimpleVertexShader* terrainVS;
 	SimplePixelShader* terrainPS;
 
-	Mesh* skybox;
-	ID3D11ShaderResourceView* skyboxSRV;
-	ID3D11RasterizerState*  rsSkybox;
-	ID3D11DepthStencilState* dsSkybox;
-	SimpleVertexShader* skyboxVS;
-	SimplePixelShader* skyboxPS;
+	CubeMap* skybox;
 
 	// The matrices to go from model space to screen space
 	DirectX::XMFLOAT4X4 worldMatrix;

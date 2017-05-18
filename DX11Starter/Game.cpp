@@ -33,6 +33,8 @@ Game::Game(HINSTANCE hInstance)
 	vertexShader = 0;
 	pixelShader = 0;
 	camera = new Camera(width, height);
+	skybox = new CubeMap();
+	Entity::activeSkybox = skybox;
 
 	FMOD_RESULT res;
 	res = FMOD::System_Create(&system);
@@ -96,10 +98,8 @@ Game::~Game()
 	delete pixelShader;
 	delete simpleEmitter;
 
-	skyboxSRV->Release();
-	delete skyboxVS;
-	delete skyboxPS;
-	
+	delete skybox;
+
 	ppsrv->Release();
 	ppRenderTargetView->Release();
 	delete ppVS;
@@ -167,7 +167,10 @@ void Game::Init()
 	// Essentially: "What kind of shape should the GPU draw with our data?"
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	HRESULT hr = CreateDDSTextureFromFile(device, L"Assets/Textures/EmptySpace.dds", 0, &skyboxSRV);
+	ID3D11ShaderResourceView* skySRV = (skybox->GetResourceView());
+	HRESULT hr = CreateDDSTextureFromFile(device, L"Assets/Textures/EmptySpace.dds", 0, &skySRV);
+	skybox->SetResourceView(skySRV);
+
 	//printf(hr);
 	//CreateWICTextureFromFile(device, L"Assets/Textures/skybox.dds", 0, &skyboxSRV);
 
@@ -187,7 +190,9 @@ void Game::Init()
 	rsDesc.FillMode = D3D11_FILL_SOLID;
 	rsDesc.CullMode = D3D11_CULL_FRONT;
 	rsDesc.DepthClipEnable = true;
-	device->CreateRasterizerState(&rsDesc, &rsSkybox);
+	ID3D11RasterizerState* rs;
+	device->CreateRasterizerState(&rsDesc, &rs);
+	skybox->SetRasterizerState(rs);
 
 	// post process effects
 	D3D11_TEXTURE2D_DESC textureDesc = {};
@@ -231,7 +236,9 @@ void Game::Init()
 	dsDesc.DepthEnable = true;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-	device->CreateDepthStencilState(&dsDesc, &dsSkybox);
+	ID3D11DepthStencilState* dss;
+	device->CreateDepthStencilState(&dsDesc, &dss);
+	skybox->SetStencilState(dss);
 
 	ID3D11Texture2D* dofTexture;
 	device->CreateTexture2D(&textureDesc, 0, &dofTexture);
@@ -333,12 +340,14 @@ void Game::LoadShaders()
 	if (!terrainPS->LoadShaderFile(L"x64/Debug/ScrollingTexturePS.cso"))
 		terrainPS->LoadShaderFile(L"ScrollingTexturePS.cso");
 
-	skyboxVS = new SimpleVertexShader(device, context);
+	SimpleVertexShader* skyboxVS = new SimpleVertexShader(device, context);
 	if (!skyboxVS->LoadShaderFile(L"x64/Debug/SkyboxVS.cso"))
 		skyboxVS->LoadShaderFile(L"SkyboxVS.cso");
-	skyboxPS = new SimplePixelShader(device, context);
+	SimplePixelShader* skyboxPS = new SimplePixelShader(device, context);
 	if (!skyboxPS->LoadShaderFile(L"x64/Debug/SkyboxPS.cso")) 
 		skyboxPS->LoadShaderFile(L"SkyboxPS.cso");
+	skybox->SetSVS(skyboxVS);
+	skybox->SetSPS(skyboxPS);
 
 	ppVS = new SimpleVertexShader(device, context);
 	if (!ppVS->LoadShaderFile(L"x64/Debug/PPVS.cso"))
@@ -359,6 +368,7 @@ void Game::LoadShaders()
 	dofBlurPS = new SimplePixelShader(device, context);
 	if (!dofBlurPS->LoadShaderFile(L"x64/Debug/DepthOfFieldBlurPS.cso"))
 		dofBlurPS->LoadShaderFile(L"DepthOfFieldBlurPS.cso");
+
 	// You'll notice that the code above attempts to load each
 	// compiled shader file (.cso) from two different relative paths.
 
@@ -460,13 +470,17 @@ void Game::CreateBasicGeometry()
 	Mesh* car = new Mesh("Assets/Models/Porsche_911_GT2.obj", device);
 	meshes.push_back(car);
 
+	skybox->SetMesh(cube);
+  
 	Mesh* terrainMesh = new Mesh(8, 8, device);
 	meshes.push_back(terrainMesh);
 
-	skybox = cube;
 
 	Material* defMaterial = new Material(vertexShader, pixelShader, carTex, sampler);
 	materials.push_back(defMaterial);
+	Material* playerMaterial = new Material(vertexShader, pixelShader, metalTex, sampler);
+	playerMaterial->SetReflective(0.8f);
+	materials.push_back(playerMaterial);
 	Material* woodMaterial = new Material(vertexShader, pixelShader, woodTex, sampler);
 	materials.push_back(woodMaterial);
 	Material* dynMaterial = new Material(terrainVS, terrainPS, terrainTex, sampler);
@@ -489,7 +503,7 @@ void Game::CreateBasicGeometry()
 	terrainR->SetScale({ 5.0f, 5.0f, 25.0f });
 	terrainR->Activate();
 
-	Entity* playerEnt = new Entity(car, defMaterial);
+	Entity* playerEnt = new Entity(car, playerMaterial);
   
 	playerEnt->Activate();
 	//RailSet* rs = new RailSet(cube,defMaterial,&entities);
@@ -627,10 +641,9 @@ void Game::Draw(float deltaTime, float totalTime)
 		ID3D11Buffer* vb = mesh->GetVertexBuffer();
 		context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
 		context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-		entity->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), dirLight, dirLight2);
+		entity->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), dirLight, dirLight2, camera->GetPosition());
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
-
 	terrainPS->SetFloat("time", totalTime);
 	Mesh* mesh = terrainL->GetMesh();
 	ID3D11Buffer* vb = mesh->GetVertexBuffer();
@@ -645,29 +658,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	//render sky, must occur after all solid objects
-	ID3D11Buffer* skyboxVB = skybox->GetVertexBuffer();
-	ID3D11Buffer* skyboxIB = skybox->GetIndexBuffer();
 
-	context->IASetVertexBuffers(0, 1, &skyboxVB, &stride, &offset);
-	context->IASetIndexBuffer(skyboxIB, DXGI_FORMAT_R32_UINT, 0);
-
-	skyboxVS->SetMatrix4x4("view", camera->GetViewMatrix());
-	skyboxVS->SetMatrix4x4("projection", camera->GetProjectionMatrix());
-	skyboxVS->CopyAllBufferData();
-	skyboxVS->SetShader();
-
-	skyboxPS->SetShaderResourceView("Skybox", skyboxSRV);
-	skyboxPS->SetSamplerState("Sampler", sampler);
-	skyboxPS->CopyAllBufferData();
-	skyboxPS->SetShader();
-
-	context->RSSetState(rsSkybox);
-	context->OMSetDepthStencilState(dsSkybox, 0);
-	context->DrawIndexed(skybox->GetIndexCount(),0,0);
-
-	context->RSSetState(0);
-	context->OMSetDepthStencilState(0, 0);
+	skybox->DrawSkybox(context, camera, sampler);
 
 	// Draw particles
 	simpleEmitter->Draw(context, camera, deltaTime, totalTime);
