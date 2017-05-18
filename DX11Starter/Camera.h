@@ -7,6 +7,7 @@ class Camera
 public:
 	Camera(unsigned int, unsigned int);
 	~Camera();
+	XMFLOAT3 GetPosition();
 	XMFLOAT4X4 GetViewMatrix();
 	XMFLOAT4X4 GetProjectionMatrix();
 	void Update(float);

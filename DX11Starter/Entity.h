@@ -2,6 +2,8 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "Lights.h"
+#include "CubeMap.h"
+#include "Camera.h"
 #include <DirectXMath.h>
 
 using namespace DirectX;
@@ -25,8 +27,10 @@ public:
 	void Activate();
 	void Deactivate();
 	bool IsActive();
-	void PrepareMaterial(XMFLOAT4X4, XMFLOAT4X4, DirectionalLight, DirectionalLight);
+	void PrepareMaterial(XMFLOAT4X4, XMFLOAT4X4, DirectionalLight, DirectionalLight, XMFLOAT3);
 	void PrepareTerrainMaterial(XMFLOAT4X4 view, XMFLOAT4X4 projection, float * frequencies, unsigned int length, DirectionalLight light, DirectionalLight light2);
+
+	static CubeMap* activeSkybox;
 private:
 	bool active;
 	Mesh* _mesh;

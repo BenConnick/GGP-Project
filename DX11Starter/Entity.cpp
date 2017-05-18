@@ -1,6 +1,8 @@
 #include "Entity.h"
 
 
+
+CubeMap* Entity::activeSkybox = NULL;
 Entity::Entity(Mesh* mesh, Material* material)
 {
 	_mesh = mesh;
@@ -94,7 +96,7 @@ void Entity::UpdateWorldMatrix() {
 	XMStoreFloat4x4(&_worldMatrix, XMMatrixTranspose(world));
 }
 
-void Entity::PrepareMaterial(XMFLOAT4X4 view, XMFLOAT4X4 projection, DirectionalLight light, DirectionalLight light2) {
+void Entity::PrepareMaterial(XMFLOAT4X4 view, XMFLOAT4X4 projection, DirectionalLight light, DirectionalLight light2, XMFLOAT3 cameraPosition) {
 	SimpleVertexShader* vs = _material->GetVertexShader();
 	vs->SetMatrix4x4("view", view);
 	vs->SetMatrix4x4("projection", projection);
@@ -103,8 +105,17 @@ void Entity::PrepareMaterial(XMFLOAT4X4 view, XMFLOAT4X4 projection, Directional
 	SimplePixelShader* ps = _material->GetPixelShader();
 	ps->SetData("light", &light, sizeof(DirectionalLight));
 	ps->SetData("light2", &light2, sizeof(DirectionalLight));
+	ps->SetData("CameraPosition", &cameraPosition, sizeof(XMFLOAT3));
+	float reflective = (_material->GetReflectivity());
+	ps->SetData("reflectivity", &reflective, sizeof(float));
 	ps->SetShaderResourceView("diffuseTexture", _material->GetTexture());
+
+	if (_material->GetReflectivity() > 0.0f) {
+		ps->SetShaderResourceView("Skybox", activeSkybox->GetResourceView());
+	}
 	ps->SetSamplerState("basicSampler", _material->GetSamplerState());
+
+
 	ps->CopyAllBufferData();
 	vs->SetShader();
 	ps->SetShader();

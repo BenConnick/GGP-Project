@@ -11,10 +11,14 @@ public:
 	SimplePixelShader* GetPixelShader();
 	ID3D11ShaderResourceView* GetTexture();
 	ID3D11SamplerState* GetSamplerState();
+	float GetReflectivity();
+	void SetReflective(float refl);
 private:
 	SimpleVertexShader* _vertexShader;
 	SimplePixelShader* _pixelShader;
 	ID3D11ShaderResourceView* _texture;
 	ID3D11SamplerState* _sampler;
+
+	float reflective=0.0f;
 };
 

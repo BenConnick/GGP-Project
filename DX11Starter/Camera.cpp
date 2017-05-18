@@ -22,6 +22,10 @@ Camera::~Camera()
 {
 }
 
+XMFLOAT3 Camera::GetPosition() {
+	return _position;
+}
+
 XMFLOAT4X4 Camera::GetViewMatrix()
 {
 	return _viewMatrix;
