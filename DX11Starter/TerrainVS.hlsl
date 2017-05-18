@@ -68,7 +68,8 @@ VertexToPixel main(VertexShaderInput input)
 
 	uint newid = input.id % 8;
 
-	newWorld[3][1] += saturate(amplitudes[newid] * 12);
+	if (abs(input.position.z) > 1.9)
+		newWorld[3][1] += 10 * saturate(amplitudes[newid] * 100);
 
 	// The vertex's position (input.position) must be converted to world space,
 	// then camera space (relative to our 3D camera), then to proper homogenous 

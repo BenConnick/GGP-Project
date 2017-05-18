@@ -478,14 +478,14 @@ void Game::CreateBasicGeometry()
 	//testCube2->SetPosition({ 1.0f,1.0f,1.0f });
 
 	terrainL = new Entity(terrainMesh, dynMaterial);
-	terrainL->SetPosition({ -17.4f, -2.0f, 20.0f });
+	terrainL->SetPosition({ -17.4f, -2.0f, 0.0f });
 	terrainL->SetRotation({ 0.0f, 0.0f, 0.0f });
 	terrainL->SetScale({ 5.0f, 5.0f, 25.0f });
 	terrainL->Activate();
 	
 	terrainR = new Entity(terrainMesh, dynMaterial);
 	terrainR->SetRotation({ 0.0f, 3.14f, 0.0f });
-	terrainR->SetPosition({ +17.4f, -2.0f, 20.0f });
+	terrainR->SetPosition({ +17.4f, -2.0f, 0.0f });
 	terrainR->SetScale({ 5.0f, 5.0f, 25.0f });
 	terrainR->Activate();
 
