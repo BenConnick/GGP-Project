@@ -108,6 +108,8 @@ void Entity::PrepareMaterial(XMFLOAT4X4 view, XMFLOAT4X4 projection, Directional
 	ps->SetData("CameraPosition", &cameraPosition, sizeof(XMFLOAT3));
 	float reflective = (_material->GetReflectivity());
 	ps->SetData("reflectivity", &reflective, sizeof(float));
+	XMFLOAT4 particleColor = ParticleManager::GetInstance().GetCyclingColor();
+	ps->SetData("ParticleColor", &particleColor, sizeof(XMFLOAT4));
 	ps->SetShaderResourceView("diffuseTexture", _material->GetTexture());
 
 	if (_material->GetReflectivity() > 0.0f) {

@@ -4,6 +4,7 @@
 #include "Lights.h"
 #include "CubeMap.h"
 #include "Camera.h"
+#include "ParticleManager.h";
 #include <DirectXMath.h>
 
 using namespace DirectX;

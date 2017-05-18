@@ -55,12 +55,16 @@ void ParticleManager::Update(float dt) {
 		skyTimer -= skyInterval;
 		SkyColorBurst();
 	}
+
+	updateCyclingColor(currentColor);
 }
 
 void ParticleManager::SkyColorBurst() {
 	if (emitter == nullptr) return;
 
 	XMFLOAT4 color = XMFLOAT4(XMScalarCos(timer), XMScalarSin(timer), XMScalarCos(timer),0.3);
+	currentColor = nextColor;
+	nextColor = color;
 
 	XMFLOAT3 vel = XMFLOAT3(0, 0, -50);
 	XMFLOAT3 pos = XMFLOAT3(0, 0, 50);
@@ -75,3 +79,40 @@ void ParticleManager::SkyColorBurst() {
 	}
 }
 
+
+XMFLOAT4 ParticleManager::GetCyclingColor() {
+	return cyclingColor;
+}
+
+//"cycling color" is gradually updated until it matches last chosen color
+//cycling color is fed directly into the pixel shader
+void ParticleManager::updateCyclingColor(XMFLOAT4 color) {
+	float speed = 0.05f;
+	if (cyclingColor.x < color.x) {
+		cyclingColor.x+= min( speed, abs(color.x - cyclingColor.x));
+	}
+	else if (cyclingColor.x > color.x) {
+		cyclingColor.x-= min(speed, abs(color.x - cyclingColor.x));
+	}
+
+	if (cyclingColor.y < color.y) {
+		cyclingColor.y+= min(speed, abs(color.y - cyclingColor.y));
+	}
+	else if (cyclingColor.y > color.y) {
+		cyclingColor.y-= min(speed, abs(color.y - cyclingColor.y));
+	}
+
+	if (cyclingColor.z < color.z) {
+		cyclingColor.z+= min(speed, abs(color.z - cyclingColor.z));
+	}
+	else if (cyclingColor.z > color.z) {
+		cyclingColor.z-= min(speed, abs(color.z - cyclingColor.z));
+	}
+
+	if (cyclingColor.w < color.w) {
+		cyclingColor.w+= min(speed, abs(color.w - cyclingColor.w));
+	}
+	else if (cyclingColor.w > color.w) {
+		cyclingColor.w-= min(speed, abs(color.w - cyclingColor.w));
+	}
+}

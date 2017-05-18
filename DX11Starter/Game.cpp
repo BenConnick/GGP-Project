@@ -478,8 +478,8 @@ void Game::CreateBasicGeometry()
 
 	Material* defMaterial = new Material(vertexShader, pixelShader, carTex, sampler);
 	materials.push_back(defMaterial);
-	Material* playerMaterial = new Material(vertexShader, pixelShader, metalTex, sampler);
-	playerMaterial->SetReflective(0.8f);
+	Material* playerMaterial = new Material(vertexShader, pixelShader, carTex, sampler);
+	playerMaterial->SetReflective(0.2f);
 	materials.push_back(playerMaterial);
 	Material* woodMaterial = new Material(vertexShader, pixelShader, woodTex, sampler);
 	materials.push_back(woodMaterial);
@@ -746,7 +746,7 @@ void Game::RenderDepthBuffer(float* freqs, float deltaTime, float totalTime) {
 		ID3D11Buffer* vb = mesh->GetVertexBuffer();
 		context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
 		context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-		entity->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), dirLight, dirLight2);
+		entity->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), dirLight, dirLight2,camera->GetPosition());
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
 

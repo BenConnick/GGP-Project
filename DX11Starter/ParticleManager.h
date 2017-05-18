@@ -15,9 +15,14 @@ public:
 	void NoteHitBurst(XMFLOAT3 pos);
 	void Update(float dt);
 	void SkyColorBurst();
+
+	XMFLOAT4 GetCyclingColor();
 private:
 	ParticleManager();
-	XMFLOAT3 cyclingColor;
+	XMFLOAT4 nextColor;
+	XMFLOAT4 currentColor;
+	XMFLOAT4 cyclingColor;
+	void updateCyclingColor(XMFLOAT4 color);
 	Emitter* emitter;
 	float skyInterval = 1;
 	float skyTimer = 0;

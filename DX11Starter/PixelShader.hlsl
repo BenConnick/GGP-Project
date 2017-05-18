@@ -27,6 +27,7 @@ cbuffer externalData : register(b0) {
 	DirectionalLight light2;
 	float3 CameraPosition;
 	float reflectivity;
+	float4 ParticleColor;
 }
 
 Texture2D diffuseTexture : register(t0);
@@ -56,6 +57,11 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float amt = saturate(dot(input.normal, normDir));
 	float amt2 = saturate(dot(input.normal, normDir2));
+	float3 y;
+	y.x = 0;
+	y.y = 1;
+	y.z = 0;
+	float amt3 = saturate(dot(input.normal, y));
 
 	float4 res1 = (light.DiffuseColor * amt) + light.AmbientColor;
 	float4 res2 = (light2.DiffuseColor * amt2) + light.AmbientColor;
@@ -67,5 +73,6 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float4 skyColor = Skybox.Sample(basicSampler, reflect(-toCamera, input.normal));
 
 	float4 litColor = (res1 + res2) * texColor;
-	return lerp(litColor, skyColor, reflectivity);
+	float4 refl =  lerp(litColor, skyColor, reflectivity);
+	return lerp(refl, (ParticleColor*amt3), reflectivity);
 }
