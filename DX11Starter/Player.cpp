@@ -3,10 +3,11 @@
 
 #pragma once
 
-Player::Player(Entity* e, RailSet* r)
+Player::Player(Entity* e, std::vector<XMFLOAT3> positions)
 {
 	entity = e;
-	rails = r;
+	rails = positions;
+	desiredPosition = positions[defaultRail];
 
 	entity->SetScale({ defaultScale,defaultScale,defaultScale });
 }
@@ -14,10 +15,6 @@ Player::Player(Entity* e, RailSet* r)
 
 Player::~Player()
 {
-	/*for (int i = 0; i < railCount; i++) {
-		delete rails[i];
-	}*/
-	delete rails;
 }
 
 void Player::Update(float deltaTime) {
@@ -44,6 +41,10 @@ void Player::Update(float deltaTime) {
 		if (currentScale < defaultScale) { currentScale = defaultScale; }
 		entity->SetScale({ currentScale,currentScale,currentScale });
 	}
+
+	XMFLOAT3 newPos;
+	XMStoreFloat3(&newPos, XMVectorLerp(XMLoadFloat3(&entity->GetPosition()), XMLoadFloat3(&desiredPosition),0.1f));
+	entity->SetPosition(newPos);
 }
 
 void Player::Hit() {
@@ -60,19 +61,22 @@ void Player::MoveLeft()
 {
 	if (currentRail > 0) {
 		currentRail--;
-		entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint());
+		//entity->SetPosition(rails[currentRail]);
+		desiredPosition = rails[currentRail];
 	}
 }
 void Player::MoveRight()
 {
 	if (currentRail < RailSet::railCount-1) {
 		currentRail++;
-		entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint());
+		//entity->SetPosition(rails[currentRail]);
+		desiredPosition = rails[currentRail];
 	}
 }
 //reset to default rail
 void Player::MoveDefault()
 {
 	currentRail = defaultRail;
-	entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint());
+	//entity->SetPosition(rails[currentRail]);
+	desiredPosition = rails[currentRail];
 }

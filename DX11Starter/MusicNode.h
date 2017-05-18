@@ -12,7 +12,7 @@ enum NodeState {
 class MusicNode
 {
 public:
-	MusicNode(Entity* e, RailSet* r, float t, int currentR);
+	MusicNode(Entity* e, std::vector<XMFLOAT3>* positions, float t, int currentR);
 	~MusicNode();
 
 	//Getters and setters
@@ -31,7 +31,9 @@ public:
 	void Miss();
 private:
 	Entity* entity; 
-	RailSet* rails;
+	std::vector<XMFLOAT3>* rails;
+
+	XMFLOAT3 posFromTime(float t);
 
 	NodeState state;
 	float time; //how far down the rail node is

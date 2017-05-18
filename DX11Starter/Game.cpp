@@ -167,7 +167,7 @@ void Game::Init()
 	// Essentially: "What kind of shape should the GPU draw with our data?"
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	HRESULT hr = CreateDDSTextureFromFile(device, L"Assets/Textures/skybox3.dds", 0, &skyboxSRV);
+	HRESULT hr = CreateDDSTextureFromFile(device, L"Assets/Textures/EmptySpace.dds", 0, &skyboxSRV);
 	//printf(hr);
 	//CreateWICTextureFromFile(device, L"Assets/Textures/skybox.dds", 0, &skyboxSRV);
 
@@ -329,6 +329,10 @@ void Game::LoadShaders()
 	terrainVS = new SimpleVertexShader(device, context);
 	if (!terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso"))
 		terrainVS->LoadShaderFile(L"x64/Debug/TerrainVS.cso");
+	terrainPS = new SimplePixelShader(device, context);
+	if (!terrainPS->LoadShaderFile(L"x64/Debug/ScrollingTexturePS.cso"))
+		terrainPS->LoadShaderFile(L"ScrollingTexturePS.cso");
+
 	skyboxVS = new SimpleVertexShader(device, context);
 	if (!skyboxVS->LoadShaderFile(L"x64/Debug/SkyboxVS.cso"))
 		skyboxVS->LoadShaderFile(L"SkyboxVS.cso");
@@ -433,11 +437,13 @@ void Game::CreateBasicGeometry()
 	ID3D11ShaderResourceView* metalTex;
 	ID3D11ShaderResourceView* woodTex;
 	ID3D11ShaderResourceView* terrainTex;
+	ID3D11ShaderResourceView* carTex;
 
+	CreateWICTextureFromFile(device, context, L"Assets/Textures/wheel2.bmp", 0, &carTex);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/metal.jpg", 0, &metalTex);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &woodTex);
 	CreateWICTextureFromFile(device, context, L"Assets/Textures/SimpleParticle.jpg", 0, &particleTexture);
-	CreateWICTextureFromFile(device, context, L"Assets/Textures/wood.jpg", 0, &terrainTex);
+	CreateWICTextureFromFile(device, context, L"Assets/Textures/sand-texture.jpg", 0, &terrainTex);
 
 	Mesh* cone = new Mesh("Assets/Models/cone.obj", device);
 	meshes.push_back(cone);
@@ -459,11 +465,11 @@ void Game::CreateBasicGeometry()
 
 	skybox = cube;
 
-	Material* defMaterial = new Material(vertexShader, pixelShader, metalTex, sampler);
+	Material* defMaterial = new Material(vertexShader, pixelShader, carTex, sampler);
 	materials.push_back(defMaterial);
 	Material* woodMaterial = new Material(vertexShader, pixelShader, woodTex, sampler);
 	materials.push_back(woodMaterial);
-	Material* dynMaterial = new Material(terrainVS, pixelShader, terrainTex, sampler);
+	Material* dynMaterial = new Material(terrainVS, terrainPS, terrainTex, sampler);
 	materials.push_back(dynMaterial);
 
 	//testCube1 = new Entity(sphere, dynMaterial);
@@ -472,25 +478,31 @@ void Game::CreateBasicGeometry()
 	//testCube2->SetPosition({ 1.0f,1.0f,1.0f });
 
 	terrainL = new Entity(terrainMesh, dynMaterial);
-	terrainL->SetPosition({ -3.5f, -2.0f, 0.0f });
+	terrainL->SetPosition({ -17.4f, -2.0f, 20.0f });
 	terrainL->SetRotation({ 0.0f, 0.0f, 0.0f });
-	terrainL->SetScale({ 1.0f, 1.0f, 5.0f });
+	terrainL->SetScale({ 5.0f, 5.0f, 25.0f });
 	terrainL->Activate();
 	
 	terrainR = new Entity(terrainMesh, dynMaterial);
 	terrainR->SetRotation({ 0.0f, 3.14f, 0.0f });
-	terrainR->SetPosition({ +3.5f, -2.0f, 0.0f });
-	terrainR->SetScale({ 1.0f, 1.0f, 5.0f });
+	terrainR->SetPosition({ +17.4f, -2.0f, 20.0f });
+	terrainR->SetScale({ 5.0f, 5.0f, 25.0f });
 	terrainR->Activate();
 
 	Entity* playerEnt = new Entity(car, defMaterial);
   
 	playerEnt->Activate();
-	RailSet* rs = new RailSet(cube,defMaterial,&entities);
-	player = new Player(playerEnt, rs);
+	//RailSet* rs = new RailSet(cube,defMaterial,&entities);
+
+	std::vector<XMFLOAT3> railPositions;
+	float height = -1;
+	railPositions.push_back(XMFLOAT3(-1,height,0));
+	railPositions.push_back(XMFLOAT3(0, height, 0));
+	railPositions.push_back(XMFLOAT3(1, height, 0));
+	player = new Player(playerEnt, railPositions);
 	entities.push_back(playerEnt);
   
-	nodeManager = new MusicNodeManager(player, rs, cube, woodMaterial,&entities,&parser);
+	nodeManager = new MusicNodeManager(player, railPositions, cube, woodMaterial,&entities,&parser);
 	///*
 	for (int j = 1; j < 7; j++) {
 		//Entity* nodeEnt = new Entity(cube, woodMaterial);
@@ -619,14 +631,17 @@ void Game::Draw(float deltaTime, float totalTime)
 		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
 
+	terrainPS->SetFloat("time", totalTime);
 	Mesh* mesh = terrainL->GetMesh();
 	ID3D11Buffer* vb = mesh->GetVertexBuffer();
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
 	context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 	terrainL->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 64, dirLight, dirLight2);
+	terrainPS->SetFloat("speed", -0.15f);
 	context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	terrainR->PrepareTerrainMaterial(camera->GetViewMatrix(), camera->GetProjectionMatrix(), freqs, 64, dirLight, dirLight2);
+	terrainPS->SetFloat("speed", 0.15f);
 	context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 

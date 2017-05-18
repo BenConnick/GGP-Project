@@ -1,9 +1,9 @@
 #include "MusicNode.h"
 #include "ParticleManager.h"
 
-MusicNode::MusicNode(Entity* e, RailSet* r, float t, int currentR)
+MusicNode::MusicNode(Entity* e, std::vector<XMFLOAT3>* positions, float t, int currentR)
 {
-	rails = r;
+	rails = positions;
 	entity = e;
 	entity->SetScale({ defaultScale,defaultScale,defaultScale });
 	time = t;
@@ -38,14 +38,16 @@ void MusicNode::SetTime(float t)
 }void MusicNode::SetRail(int r)
 {
 	currentRail = r;
-	ParticleManager::GetInstance().EmitMedParticle(rails->GetRail(currentRail)->GetAttachPoint(0), XMFLOAT3(0, 0, -10));
+	XMFLOAT3 pos = posFromTime(0);
+	ParticleManager::GetInstance().EmitMedParticle(XMFLOAT3(pos.x,pos.y,pos.z+20), XMFLOAT3(0, 0, -20));
 }
 
 void MusicNode::Update(float deltaTime)
 {
 	if (state == NodeState::DEAD) { return; }
 	time -= deltaTime;
-	entity->SetPosition(rails->GetRail(currentRail)->GetAttachPoint(time));
+	XMFLOAT3 pos = posFromTime(time);
+	entity->SetPosition(XMFLOAT3(pos.x, pos.y - 5, pos.z));
 
 	//miss animation // shrink to nothing
 	if (state == NodeState::MISS) {
@@ -71,4 +73,10 @@ void MusicNode::Hit()
 void MusicNode::Miss()
 {
 	state = NodeState::MISS;
+}
+
+XMFLOAT3 MusicNode::posFromTime(float t) {
+	XMFLOAT3 pos = rails->at(currentRail);
+	XMFLOAT3 point = { pos.x,pos.y,pos.z + t * 20 };
+	return point;
 }

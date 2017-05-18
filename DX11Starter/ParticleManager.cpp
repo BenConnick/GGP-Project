@@ -25,11 +25,11 @@ void ParticleManager::EmitSmallParticle(XMFLOAT3 pos, XMFLOAT3 vel) {
 }
 
 void ParticleManager::EmitMedParticle(XMFLOAT3 pos, XMFLOAT3 vel) {
-	emitter->SpawnNewParticle(pos, vel, XMFLOAT4(1, 1, 1, 1), XMFLOAT4(1, 1, 1, 0.5), XMFLOAT4(1, 1, 1, 0), XMFLOAT3(1, 1, 1));
+	emitter->SpawnNewParticle(pos, vel, XMFLOAT4(1, 1, 1, 1), XMFLOAT4(1, 1, 1, 0.5), XMFLOAT4(1, 1, 1, 0), XMFLOAT3(2, 2, 2));
 }
 
 void ParticleManager::EmitSkyParticle(XMFLOAT3 pos, XMFLOAT3 vel, XMFLOAT4 color) {
-	emitter->SpawnNewParticle(pos, vel, XMFLOAT4(color.x,color.y,color.z,0), color, color, XMFLOAT3(10.1, 10.1, 10.1));
+	emitter->SpawnNewParticle(pos, vel, XMFLOAT4(color.x,color.y,color.z,0), color, color, XMFLOAT3(20.1, 20.1, 20.1));
 }
 
 void ParticleManager::NoteHitBurst(DirectX::XMFLOAT3 pos) {

@@ -71,6 +71,7 @@ private:
 	SimplePixelShader* dofBlurPS;
 
 	SimpleVertexShader* terrainVS;
+	SimplePixelShader* terrainPS;
 
 	Mesh* skybox;
 	ID3D11ShaderResourceView* skyboxSRV;

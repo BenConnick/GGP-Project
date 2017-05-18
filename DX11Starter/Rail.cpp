@@ -2,9 +2,9 @@
 
 
 
-Rail::Rail(Entity* e)
+Rail::Rail(XMFLOAT3 pos)
 {
-	entity = e;
+	position = pos;
 }
 
 
@@ -18,7 +18,7 @@ XMFLOAT3 Rail::GetAttachPoint()
 }
 XMFLOAT3 Rail::GetAttachPoint(float t)
 {
-	XMFLOAT3 pos = entity->GetPosition();
+	XMFLOAT3 pos = position;
 	XMFLOAT3 point = { pos.x,pos.y,pos.z+t*20 };
 	return point;
 }
