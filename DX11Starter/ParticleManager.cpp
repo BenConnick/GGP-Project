@@ -56,7 +56,7 @@ void ParticleManager::Update(float dt) {
 		SkyColorBurst();
 	}
 
-	updateCyclingColor(currentColor);
+	//updateCyclingColor(currentColor);
 }
 
 void ParticleManager::SkyColorBurst() {
@@ -81,7 +81,8 @@ void ParticleManager::SkyColorBurst() {
 
 
 XMFLOAT4 ParticleManager::GetCyclingColor() {
-	return cyclingColor;
+	float t = timer + 4.5;
+	return XMFLOAT4(XMScalarCos(t), XMScalarSin(t), XMScalarCos(t), 0.3);;
 }
 
 //"cycling color" is gradually updated until it matches last chosen color
