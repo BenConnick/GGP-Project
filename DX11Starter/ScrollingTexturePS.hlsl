@@ -60,6 +60,8 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float4 res2 = (light2.DiffuseColor * amt2) + light.AmbientColor;
 
 	float2 scrolledUV = input.uv + float2(0, time * speed);
+	// special resize for terrain
+	scrolledUV = scrolledUV * 8;
 
 	float4 texColor = diffuseTexture.Sample(basicSampler, scrolledUV);
 
