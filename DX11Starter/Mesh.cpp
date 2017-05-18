@@ -12,6 +12,56 @@ Mesh::Mesh(Vertex* vertices, unsigned int vertexCount,
 	Initialize(vertices, vertexCount, indices, indexCount, device);
 }
 
+Mesh::Mesh(unsigned int width, unsigned int depth, ID3D11Device* device) {
+	int totalverts = width * depth;
+	Vertex* vertices = new Vertex[totalverts];
+	memset(vertices, 0, sizeof(Vertex) * totalverts);
+
+	int totalIndices = (width * 2) * (depth - 1) + (depth - 2);
+
+	unsigned int* indices = new unsigned int[totalIndices];
+
+	int offset = 0;
+
+	for (int z = 0; z < depth; z++) {
+		for (int x = 0; x < width; x++) {
+			float halfWidth = ((float)width - 1.0f) / 2.0f;
+			float halfDepth = ((float)depth - 1.0f) / 2.0f;
+			vertices[z * depth + x] = {
+				{(float)x - halfWidth, 0.0f, (float)z - halfDepth},
+				{0.0f, 1.0f, 0.0f},
+				{(float)x / (width - 1), (float)z / (depth - 1)}
+			};
+		}
+	}
+
+	offset = 0;
+	for (int z = 0; z < depth - 1; z++) {
+		if (z % 2 == 0) {
+			int x;
+			for (x = 0; x < width; x++) {
+				indices[offset++] = x + (z * width);
+				indices[offset++] = x + (z * width) + width;
+			}
+			if (z != depth - 2) {
+				indices[offset++] = --x + (z * width);
+			}
+		}
+		else {
+			int x;
+			for (x = width - 1; x >= 0; x--) {
+				indices[offset++] = x + (z * width);
+				indices[offset++] = x + (z * width) + width;
+			}
+			if (z != depth - 2) {
+				indices[offset++] = ++x + (z * width);
+			}
+		}
+	}
+
+	Initialize(vertices, totalverts, indices, totalIndices, device);
+}
+
 Mesh::Mesh(char* filename, ID3D11Device* device)
 {
 	// File input object

@@ -7,12 +7,12 @@
 class Player
 {
 public:
-	Player(Entity* e, RailSet* r);
+	Player(Entity* e, std::vector<XMFLOAT3> positions);
 	~Player();
 
 	Entity* entity;
 
-	RailSet* rails; //pointer to group of rail objects
+	std::vector<XMFLOAT3> rails;
 
 	void Update(float deltaTime);
 
@@ -46,5 +46,7 @@ private:
 	//presently we are going with a 3-rail, middle reset approach, so this is not being used
 
 	bool defaultReset=true;//reset to default position when no input enabled
+
+	XMFLOAT3 desiredPosition;
 };
 

@@ -4,8 +4,7 @@
 class RailSet
 {
 public:
-	RailSet(Rail** railArray);
-	RailSet(Mesh* model, Material* mat, std::vector<Entity*>* entities);
+	RailSet(std::vector<XMFLOAT3>* positions);
 	~RailSet();
 
 	Rail* GetRail(int index);

@@ -8,7 +8,7 @@ using namespace DirectX;
 class Rail
 {
 public:
-	Rail(Entity* e);
+	Rail(XMFLOAT3 pos);
 	~Rail();
 
 	//returns the coordinate at which player should put themselves in order to appear attached to this rail
@@ -17,7 +17,6 @@ public:
 	XMFLOAT3 GetAttachPoint(float t);
 
 private:
-	Entity* entity;
-
+	XMFLOAT3 position;
 };
 

@@ -9,6 +9,10 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{5f37ec8c-c624-4f3d-8d2e-1571a1df475b}</UniqueIdentifier>
     </Filter>
@@ -53,7 +57,10 @@
     <ClCompile Include="MusicNodeManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RailSet.cpp">
+    <ClCompile Include="ParticleEmitter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -103,10 +110,13 @@
     <ClInclude Include="MusicNodeManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RailSet.h">
+    <ClInclude Include="Particle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="ParticleManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleEmitter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -117,6 +127,21 @@
     <FxCompile Include="VertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="ParticleGS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticlePS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticleVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SpawnGS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SpawnVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
     <FxCompile Include="TerrainVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
@@ -124,6 +149,27 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="SkyboxPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PPVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PPPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthOfFieldBlurPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthOfFieldPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthOfFieldVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ScrollingTexturePS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

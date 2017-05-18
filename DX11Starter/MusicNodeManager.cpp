@@ -2,17 +2,18 @@
 
 
 
-MusicNodeManager::MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial, std::vector<Entity*>* e, SMParser* smp)
+MusicNodeManager::MusicNodeManager(Player* p, std::vector<XMFLOAT3> _rails, Mesh* defaultNodeMesh, Material* defaultNodeMaterial, std::vector<Entity*>* e, SMParser* smp, Camera* cam)
 {
 
 	recycler = &Recycler::GetInstance();
 	player = p;
 	nodes = std::vector<MusicNode*>();
-	rails = r;
+	rails = _rails;
 	nodeMesh = defaultNodeMesh;
 	nodeMat = defaultNodeMaterial;
 	entities = e;
 	parser = smp;
+	cameraRef = cam;
 }
 
 
@@ -30,7 +31,7 @@ void MusicNodeManager::AddNode(int rail, float time)
 	MusicNode* node = recycler->ReactivateNode();
 	if (node == NULL) {
 		Entity* e = new Entity(nodeMesh, nodeMat);
-		node = new MusicNode(e, rails, time, rail);
+		node = new MusicNode(e, &rails, time, rail, cameraRef);
 		entities->push_back(e);
 		nodes.push_back(node);
 	}
@@ -44,7 +45,7 @@ void MusicNodeManager::AddNode(int rail, float time)
 
 void MusicNodeManager::AddNode(Entity * e, int rail, float time)
 {
-	MusicNode* n = new MusicNode(e,rails, time, rail);
+	MusicNode* n = new MusicNode(e, &rails, time, rail, cameraRef);
 	nodes.push_back(n);
 }
 

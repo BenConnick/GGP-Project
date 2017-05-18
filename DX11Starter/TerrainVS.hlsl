@@ -14,7 +14,7 @@ cbuffer externalData : register(b0)
 
 cbuffer frequencyData : register(b1) 
 {
-	float1 amplitudes[32];
+	float1 amplitudes[64];
 }
 
 // Struct representing a single vertex worth of data
@@ -66,9 +66,10 @@ VertexToPixel main(VertexShaderInput input)
 
 	matrix newWorld = world;
 
-	uint newid = input.id % 32;
+	uint newid = input.id % 8;
 
-	newWorld[3][1] += (amplitudes[newid] * 2);
+	if (abs(input.position.z) > 1.9)
+		newWorld[3][1] += 10 * saturate(amplitudes[newid] * 100);
 
 	// The vertex's position (input.position) must be converted to world space,
 	// then camera space (relative to our 3D camera), then to proper homogenous 

@@ -12,7 +12,7 @@
 class MusicNodeManager
 {
 public:
-	MusicNodeManager(Player* p, RailSet* r, Mesh* defaultNodeMesh, Material* defaultNodeMaterial, std::vector<Entity*>* e, SMParser* smp);
+	MusicNodeManager(Player* p, std::vector<XMFLOAT3> rails, Mesh* defaultNodeMesh, Material* defaultNodeMaterial, std::vector<Entity*>* e, SMParser* smp, Camera* cam);
 	~MusicNodeManager();
 
 	void AddNode(int rail, float time);
@@ -21,7 +21,7 @@ public:
 	void RemoveNode(int index);
 private:
 	std::vector<MusicNode*> nodes;
-	RailSet* rails;
+	std::vector<XMFLOAT3> rails;
 
 	Player* player;
 
@@ -35,5 +35,7 @@ private:
 	std::vector<Entity*>* entities;
 	Recycler* recycler;
 	SMParser* parser;
+
+	Camera* cameraRef;
 };
 
