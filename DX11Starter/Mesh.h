@@ -6,6 +6,7 @@ class Mesh
 public:
 	Mesh(Vertex*, unsigned int, unsigned int[], unsigned int, ID3D11Device*);
 	Mesh(char*, ID3D11Device*);
+	Mesh(unsigned int, unsigned int, ID3D11Device*);
 	~Mesh();
 	void Initialize(Vertex*, unsigned int, unsigned int[], unsigned int, ID3D11Device*);
 	ID3D11Buffer* GetVertexBuffer();

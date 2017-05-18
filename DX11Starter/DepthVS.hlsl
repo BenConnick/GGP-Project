@@ -10,12 +10,7 @@ cbuffer externalData : register(b0)
 	matrix world;
 	matrix view;
 	matrix projection;
-}
-
-cbuffer frequencyData : register(b1) 
-{
-	float1 amplitudes[64];
-}
+};
 
 // Struct representing a single vertex worth of data
 // - This should match the vertex definition in our C++ code
@@ -23,7 +18,7 @@ cbuffer frequencyData : register(b1)
 // - The name of the struct itself is unimportant, but should be descriptive
 // - Each variable must have a semantic, which defines its usage
 struct VertexShaderInput
-{
+{ 
 	// Data type
 	//  |
 	//  |   Name          Semantic
@@ -32,7 +27,6 @@ struct VertexShaderInput
 	float3 position		: POSITION;     // XYZ position
 	float3 normal		: NORMAL;
 	float2 uv			: TEXCOORD;
-	uint    id			: SV_VertexID;
 };
 
 // Struct representing the data we're sending down the pipeline
@@ -48,8 +42,6 @@ struct VertexToPixel
 	//  |    |                |
 	//  v    v                v
 	float4 position		: SV_POSITION;	// XYZW position (System Value Position)
-	float3 normal		: NORMAL;
-	float2 uv			: TEXCOORD;
 };
 
 // --------------------------------------------------------
@@ -59,16 +51,10 @@ struct VertexToPixel
 // - Output is a single struct of data to pass down the pipeline
 // - Named "main" because that's the default the shader compiler looks for
 // --------------------------------------------------------
-VertexToPixel main(VertexShaderInput input)
+VertexToPixel main( VertexShaderInput input )
 {
 	// Set up output struct
 	VertexToPixel output;
-
-	matrix newWorld = world;
-
-	uint newid = input.id % 8;
-
-	newWorld[3][1] += saturate(amplitudes[newid] * 12);
 
 	// The vertex's position (input.position) must be converted to world space,
 	// then camera space (relative to our 3D camera), then to proper homogenous 
@@ -77,7 +63,7 @@ VertexToPixel main(VertexShaderInput input)
 	//
 	// First we multiply them together to get a single matrix which represents
 	// all of those transformations (world to view to projection space)
-	matrix worldViewProj = mul(mul(newWorld, view), projection);
+	matrix worldViewProj = mul(mul(world, view), projection);
 
 	// Then we convert our 3-component position vector to a 4-component vector
 	// and multiply it by our final 4x4 matrix.
@@ -85,8 +71,6 @@ VertexToPixel main(VertexShaderInput input)
 	// The result is essentially the position (XY) of the vertex on our 2D 
 	// screen and the distance (Z) from the camera (the "depth" of the pixel)
 	output.position = mul(float4(input.position, 1.0f), worldViewProj);
-	output.normal = mul(input.normal, (float3x3)world);
-	output.uv = input.uv;
 
 	// Pass the color through 
 	// - The values will be interpolated per-pixel by the rasterizer
