@@ -61,7 +61,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float4 res2 = (light2.DiffuseColor * amt2) + light.AmbientColor;
 
 	float4 texColor = diffuseTexture.Sample(basicSampler, input.uv);
-
+	
 	float3 toCamera = normalize(CameraPosition - input.position);
 	// Sample the skybox
 	float4 skyColor = Skybox.Sample(basicSampler, reflect(-toCamera, input.normal));

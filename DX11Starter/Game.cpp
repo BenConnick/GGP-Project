@@ -307,7 +307,7 @@ void Game::CreateBasicGeometry()
 	Material* defMaterial = new Material(vertexShader, pixelShader, metalTex, sampler);
 	materials.push_back(defMaterial);
 	Material* playerMaterial = new Material(vertexShader, pixelShader, metalTex, sampler);
-	playerMaterial->SetReflective(0.9f);
+	playerMaterial->SetReflective(0.8f);
 	materials.push_back(playerMaterial);
 	Material* woodMaterial = new Material(vertexShader, pixelShader, woodTex, sampler);
 	materials.push_back(woodMaterial);

@@ -115,7 +115,6 @@ void Entity::PrepareMaterial(XMFLOAT4X4 view, XMFLOAT4X4 projection, Directional
 	}
 	ps->SetSamplerState("basicSampler", _material->GetSamplerState());
 
-
 	ps->CopyAllBufferData();
 	vs->SetShader();
 	ps->SetShader();
